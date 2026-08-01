@@ -17,11 +17,44 @@
 .lumen-vector-layer {
   position: absolute;
   inset: 0;
+  /* ------------------------------------------------------------------------
+     THESE TWO DECLARATIONS ARE LOAD-BEARING. DO NOT REMOVE THEM.
+
+     `position: absolute; inset: 0` stretches a normal element to fill its
+     containing block. It does NOT do that to a REPLACED element — a canvas,
+     an img, an svg with intrinsic dimensions. For those, CSS resolves the
+     used width from the element's own intrinsic size and then treats the
+     over-constrained `left`/`right` pair by ignoring one of them.
+
+     A canvas's intrinsic size is its BACKING STORE, i.e. its width and
+     height attributes. This layer sets those to `container size x devicePixelRatio`,
+     which is the standard way to get a crisp canvas on a high-density
+     display. So on a 2x screen the canvas was laid out at twice the
+     container's dimensions, anchored to the top-left, with the remainder
+     overflowing and clipped away.
+
+     The visible result was a wash covering exactly the top-left quarter —
+     read as "only the top half" or "only the left half" depending on where
+     the buildings happened to be — and correct on a 1x display, which is
+     what made it look intermittent and random. Browser zoom changes the
+     device pixel ratio, so it changed with zoom too.
+
+     The vector layer never showed the fault only because it happened to
+     carry `width: 100%`. That asymmetry is now removed: both overlays are
+     sized explicitly, and neither relies on `inset` alone.
+     ------------------------------------------------------------------------ */
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
-.lumen-shadow-canvas { z-index: 2; }
-.lumen-vector-layer  { z-index: 3; width: 100%; height: 100%; }
+.lumen-shadow-canvas {
+  z-index: 2;
+  /* A canvas is inline by default, which leaves a descender gap beneath it. */
+  display: block;
+}
+
+.lumen-vector-layer { z-index: 3; }
 
 /* --------------------------------------------------------------------------
    CELESTIAL VECTORS

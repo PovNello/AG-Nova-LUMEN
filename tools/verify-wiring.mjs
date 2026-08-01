@@ -575,6 +575,7 @@ expect('Map is constructed with pitch 0', /pitch:\s*0/.test(mapText));
    --------------------------------------------------------------------------- */
 
 const shadowText = readFileSync(join(ROOT, 'src', 'render', 'shadows.mjs'), 'utf8');
+const shadowCss = readFileSync(join(ROOT, 'assets', 'css', '11-lumen-map.css'), 'utf8');
 
 expect('Overlay size is measured from the container, not the map canvas',
   /container\.clientWidth/.test(mapText),
@@ -583,17 +584,92 @@ expect('Overlay size is measured from the container, not the map canvas',
 expect('getSize does not read the map canvas',
   !/getCanvas\(\)[\s\S]{0,120}clientWidth/.test(mapText));
 
-expect('The shadow surface observes its container',
-  shadowText.includes('ResizeObserver') && shadowText.includes('syncSize'));
+expect('The shadow surface still observes its container for redraws',
+  shadowText.includes('ResizeObserver'));
 
-expect('The shadow surface re-checks its size before drawing',
-  /render\([\s\S]{0,900}this\.syncSize\(\)/.test(shadowText));
+/* ---------------------------------------------------------------------------
+   REPLACED-ELEMENT SIZING
 
-expect('The shadow surface does not pin its own CSS dimensions',
-  !/canvas\.style\.(width|height)\s*=/.test(shadowText),
-  'display size must come from CSS inset:0, not inline styles');
+   This check previously asserted the OPPOSITE of what is correct, and in
+   doing so it enforced a real rendering bug for two revisions.
 
-const shadowCss = readFileSync(join(ROOT, 'assets', 'css', '11-lumen-map.css'), 'utf8');
+   The reasoning behind the old check sounded clean: "the stylesheet owns the
+   display size, so JavaScript must not set inline dimensions." That is true
+   for ordinary elements. It is false for REPLACED elements — canvas, img,
+   video, and svg with intrinsic dimensions — where `position: absolute;
+   inset: 0` does not stretch anything. CSS resolves the used width from the
+   element's intrinsic size and then discards one of the over-constrained
+   offsets.
+
+   A canvas's intrinsic size is its backing store. Sized for a 2x display,
+   the element laid out at twice its container, anchored top-left, and three
+   quarters of it was clipped away. On a 1x display it looked perfect, which
+   is what made it read as intermittent rather than as a bug.
+
+   A guard that encodes a wrong invariant is worse than no guard: it does not
+   merely fail to catch the fault, it actively blocks the fix.
+   --------------------------------------------------------------------------- */
+
+expect('The canvas display size is pinned in CSS pixels',
+  /canvas\.style\.width\s*=/.test(shadowText) &&
+  /canvas\.style\.height\s*=/.test(shadowText),
+  'a canvas is a replaced element; inset:0 alone will not size it');
+
+expect('Inline canvas sizing uses CSS pixels, not the backing store figure',
+  /canvas\.style\.width\s*=\s*width \+ 'px'/.test(shadowText),
+  'setting the device-pixel figure here reintroduces the fault');
+
+/* And the stylesheet must not rely on inset alone either. */
+expect('Overlay stylesheet gives both layers explicit dimensions',
+  /width:\s*100%/.test(shadowCss) && /height:\s*100%/.test(shadowCss),
+  'position:absolute with inset:0 does not stretch a replaced element');
+
+/* ---------------------------------------------------------------------------
+   ONE MEASUREMENT, TWO LAYERS
+
+   The vector layer and the shadow layer draw the same geography on top of
+   each other. If they are ever handed different viewport dimensions, the
+   result is not a visible sizing fault — it is shadows displaced upward by
+   half the difference and clipped along a clean horizontal edge, with the
+   vectors sitting correctly beside them. It looks like broken geometry.
+
+   Two revisions were spent chasing that before the real answer became clear:
+   do not make the measurement more reliable, make there be only one. The
+   application measures once per frame and tells both layers.
+
+   These checks enforce that arrangement, because it is the kind of thing a
+   later refactor "tidies up" by letting each component measure itself again.
+   --------------------------------------------------------------------------- */
+
+const appText = readFileSync(join(ROOT, 'src', 'app.mjs'), 'utf8');
+
+expect('The shadow layer is told its size, not asked to find it',
+  /syncSize\(width, height\)/.test(shadowText),
+  'syncSize must take explicit dimensions');
+
+expect('The shadow layer does not measure the DOM',
+  !/client(Width|Height)/.test(shadowText),
+  'measuring here creates a second, competing source of truth');
+
+expect('render() requires explicit width and height',
+  /render\(opts\)[\s\S]{0,700}\bwidth, height,/.test(shadowText));
+
+expect('The flood covers the buffer itself, not a cached size',
+  /fillRect\(0, 0, this\.buffer\.width, this\.buffer\.height\)/.test(shadowText),
+  'coverage must be a property of the canvas, so it cannot be partial');
+
+expect('clear() wipes the whole backing store',
+  /clearRect\(0, 0, this\.canvas\.width, this\.canvas\.height\)/.test(shadowText));
+
+expect('One function paints both overlays from one measurement',
+  /function paintOverlays[\s\S]{0,400}chart\.getSize\(\)[\s\S]{0,400}drawVectors\(s, size\)[\s\S]{0,600}width: size\.width/.test(appText),
+  'the vector layer and the shadow layer must receive the same pair');
+
+const measurements = [...appText.matchAll(/chart\.getSize\(\)/g)].length;
+expect('The chart is measured in exactly one place per frame',
+  measurements === 1,
+  `chart.getSize() appears ${measurements} times in app.mjs`);
+
 expect('Overlays are pinned to the container by CSS',
   /\.lumen-shadow-canvas[\s\S]{0,200}inset:\s*0/.test(shadowCss));
 

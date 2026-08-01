@@ -153,11 +153,12 @@ export class ChartView {
   /**
    * The size every overlay projects against.
    *
-   * Measured from the CONTAINER, not from the map's own canvas. The canvas
-   * lags its container during layout changes, and an overlay that projects
-   * against a lagging size is displaced by half the discrepancy rather than
-   * simply being wrong in an obvious way. The container is the one dimension
-   * both the map and the overlays are guaranteed to agree on.
+   * Measured from the CONTAINER, not from the map's own canvas: the canvas
+   * lags its container during layout changes.
+   *
+   * This is the ONLY place the chart is measured. app.paintOverlays() calls
+   * it once per frame and passes the result to both the vector layer and the
+   * shadow layer, so the two cannot drift apart.
    */
   getSize() {
     return {
@@ -177,10 +178,14 @@ export class ChartView {
   /**
    * Redraw the reticle and every celestial vector.
    *
-   * @param {Object} s  application state
+   * @param {Object} s     application state
+   * @param {Object} size  {width, height} in CSS px. Supplied by the caller,
+   *                       never measured here, so that this layer and the
+   *                       shadow layer are guaranteed to project against an
+   *                       identical viewport. Falls back to measuring only
+   *                       for direct callers.
    */
-  drawVectors(s) {
-    const size = this.getSize();
+  drawVectors(s, size = this.getSize()) {
     if (!size.width || !size.height) return;
 
     const t = viewTransform(this.getCenter(), this.getZoom(), size.width, size.height);

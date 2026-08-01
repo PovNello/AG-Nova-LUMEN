@@ -289,8 +289,13 @@ assert('The two outline colours are clearly different from each other',
 
 section('6. RENDERER PAINTS LIGHT, NOT SHADOW');
 
-assert('Buffer is flooded before silhouettes are cut',
-  /fillRect\(0, 0, this\.width, this\.height\)/.test(shadowSrc));
+/* The flood must cover the buffer's own backing store, in device pixels,
+   rather than a cached CSS-pixel size. A cached size that goes stale produces
+   a wash that stops partway down the chart along a crisp horizontal line —
+   which reads as a broken shadow engine rather than as a sizing fault. */
+assert('Buffer is flooded across its whole backing store before cutting',
+  /fillRect\(0, 0, this\.buffer\.width, this\.buffer\.height\)/.test(shadowSrc),
+  'coverage must be a property of the canvas, not of a remembered number');
 
 assert('Silhouettes are erased, not filled',
   shadowSrc.includes("'destination-out'"));

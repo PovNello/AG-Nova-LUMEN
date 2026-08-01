@@ -41,6 +41,7 @@ node tools/verify-astro.mjs      # ephemerides vs an independent NOAA implementa
 node tools/verify-geometry.mjs   # projection, hull, ray casting, exposure scenarios
 node tools/verify-wiring.mjs     # markup/module/stylesheet contracts
 node tools/verify-contrast.mjs   # perceptual separability of light and shadow
+node tools/verify-astro.mjs && node tools/verify-geometry.mjs && node tools/verify-wiring.mjs && node tools/verify-contrast.mjs
 ```
 
 All four must pass. See **Verification** below for what they actually prove.
@@ -174,7 +175,7 @@ the estimated-height marker remains visible, and that the renderer is still
 flooding light rather than filling shadow. Every check was mutation-tested
 against the original defect.
 
-`tools/verify-wiring.mjs` — **48 checks**
+`tools/verify-wiring.mjs` — **56 checks**
 
 There is no type checker, so a rename between the markup and the modules produces no error at all — just a readout that quietly never updates. This harness reads both as text and checks they agree: every telemetry field written is present and every field present is written; every control has a handler; every runtime CSS class is defined; the map style contains the layer the shadow engine queries; every host used by the style is declared in `services.js`; the north-up and no-pitch locks are still in place; and the design system rules hold — no raw colours outside the tokens file, no rounded corners, no glow, no gradient fills.
 

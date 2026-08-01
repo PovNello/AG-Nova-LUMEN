@@ -127,8 +127,7 @@ function registerSubscribers() {
   state.on(CHANGE.TICK, s => {
     panel.renderTick(s);
     chrono.renderTick(s);
-    chart.drawVectors(s);
-    drawShadows(s);
+    paintOverlays(s);
   });
 
   state.on(CHANGE.SURVEY, s => {
@@ -198,7 +197,30 @@ function recomputeInstant() {
   }, []);
 }
 
-function drawShadows(s) {
+/**
+ * Redraw both overlays from a SINGLE measurement of the chart.
+ *
+ * The size is read once, here, and handed to the vector layer and the shadow
+ * layer together. Neither is allowed to measure anything itself.
+ *
+ * This is the whole point. Two overlays projecting the same geography with
+ * independently obtained viewport dimensions will eventually be given
+ * different numbers — during layout, on a device pixel ratio change, on a
+ * font load — and when that happens the result does not look like a sizing
+ * fault. It looks like the map is lying: shadows displaced upward by half the
+ * difference, clipped along a clean horizontal edge, with the vectors still
+ * perfectly placed beside them.
+ *
+ * One measurement, one truth.
+ */
+function paintOverlays(s) {
+  if (!chart) return;
+
+  const size = chart.getSize();
+  if (!size.width || !size.height) return;
+
+  chart.drawVectors(s, size);
+
   if (!shadows) return;
 
   const belowZoom = chart.getZoom() < MIN_SHADOW_ZOOM;
@@ -212,6 +234,8 @@ function drawShadows(s) {
     buildings: s.buildings,
     center: chart.getCenter(),
     zoom: chart.getZoom(),
+    width: size.width,
+    height: size.height,
     sunAzimuth: s.sun.azimuth,
     sunAltitude: s.sun.altitude,
     showFootprints: s.footprintsEnabled
@@ -285,11 +309,9 @@ function onMapIdle() {
 }
 
 function onMapMove() {
-  /* Vectors and shadows are anchored to geography, so they must follow the
-     map continuously rather than snapping when it stops. */
-  const s = state.get();
-  chart.drawVectors(s);
-  drawShadows(s);
+  /* Both overlays are anchored to geography, so they follow the map
+     continuously rather than snapping when it stops. */
+  paintOverlays(state.get());
 }
 
 /* --------------------------------------------------------------------------

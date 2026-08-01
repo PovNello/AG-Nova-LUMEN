@@ -218,9 +218,41 @@ re-checking in `render()`.
 use a `ResizeObserver`; it must re-check before drawing; it must not set inline
 canvas dimensions.
 
-**Lesson:** when two surfaces must agree on a coordinate system, do not pass
-the size between them. Have both measure the same element, and have the
-dependent one observe rather than wait to be told.
+**Lesson, first attempt:** have both surfaces measure the same element rather
+than passing the size between them.
+
+**That lesson was wrong.** See below.
+
+### 2b. The same bug, second occurrence — two clocks
+
+The v1.1 fix had both overlays measure the container independently: the vector
+layer through `map.getSize()`, the shadow layer through its own
+`ResizeObserver`. Two measurements, taken at two different moments, equal only
+by luck.
+
+They drifted, and the shadow wash again covered only the upper portion of the
+chart with a clean horizontal cut, displaced upward by half the difference —
+while the vectors sat perfectly placed beside it. It looked like broken
+geometry, not like a sizing fault, for the second time.
+
+**The correct lesson:** do not make the measurement more reliable. Make there
+be only one. `app.paintOverlays()` now reads `chart.getSize()` **once per
+frame** and hands the identical pair to both layers. `ShadowLayer` no longer
+touches the DOM at all; its `ResizeObserver` only requests a redraw and
+decides nothing.
+
+Coverage was additionally made independent of any remembered number: the flood
+and the clear both operate in device pixels across the canvas's own backing
+store, so a partial wash is no longer expressible.
+
+**Guards added:** the shadow layer must not read `clientWidth`/`clientHeight`;
+`render()` must take explicit dimensions; the flood must target
+`buffer.width`/`buffer.height`; and `chart.getSize()` must appear exactly once
+in `app.mjs`. All mutation-tested.
+
+**The general rule, now stated properly:** when two things must agree on a
+coordinate system, shared state is not the problem — *duplicated derivation*
+is. One reader, many consumers.
 
 ### Both guards are mutation-tested
 
@@ -297,3 +329,60 @@ comment lines.
 And more importantly: **a verification tool that cries wolf is worse than no
 tool**, because the next genuine failure gets waved away. The harnesses are
 now verified too.
+
+
+### 5. The canvas is a replaced element — the actual root cause
+
+Symptom, reported across three revisions: the sunlight wash covered only the
+top-left portion of the chart, sometimes described as "only the top half",
+sometimes "only the left half", **sometimes entirely correct**, and it changed
+with browser zoom. The vector layer was always right.
+
+Every earlier fix addressed a real but secondary fault (stale canvas size in
+v1.0, duplicated measurement in v1.1) and none of them touched the cause.
+
+**The cause.** `position: absolute; inset: 0` stretches an ordinary element to
+fill its containing block. It does **not** stretch a REPLACED element — canvas,
+img, video, svg with intrinsic dimensions. For those, CSS resolves the used
+width from the element's intrinsic size and then resolves the over-constrained
+`left`/`right` pair by discarding one.
+
+A canvas's intrinsic size is its **backing store**: the `width` and `height`
+attributes. Those are set to `container x devicePixelRatio`, the standard
+recipe for a crisp canvas. So:
+
+| devicePixelRatio | canvas laid out at | visible fraction |
+|---|---|---|
+| 1 | container size | 100% — looks perfect |
+| 1.5 | 1.5x container | 67% |
+| 2 | 2x container | **50% wide, 50% tall — top-left quarter** |
+
+Browser zoom changes the device pixel ratio, so the visible fraction changed
+with zoom. That is the entire "random" behaviour.
+
+**The tell was in the stylesheet all along.** The vector layer carried
+`width: 100%; height: 100%` and never showed the fault. The canvas did not.
+Two overlays, same positioning, one correct — the asymmetry was the answer.
+
+**Fixed by** declaring explicit dimensions on both overlays in
+`11-lumen-map.css`, plus inline CSS-pixel sizing in `syncSize()` as defence in
+depth if the stylesheet fails to load.
+
+**A guard actively caused harm here.** v1.1 added a check asserting *"the
+shadow surface does not pin its own CSS dimensions"*, on the reasoning that
+stylesheets own layout and JavaScript should not interfere. Sound for ordinary
+elements, wrong for replaced ones. That check did not merely fail to catch the
+bug — **it forbade the fix**, and it was mutation-tested, so it looked
+trustworthy.
+
+**Lessons.**
+
+1. A canvas has two sizes: the backing store in device pixels, and the display
+   box in CSS pixels. Both must be set. Setting only one is a bug that a 1x
+   display will hide from you completely.
+2. When one of two near-identical components works, diff them before
+   theorising. The `width: 100%` on the SVG was visible in the same six lines
+   of CSS the whole time.
+3. Mutation testing proves a guard fires. It cannot prove the guard is
+   asserting something true. A wrong invariant, well tested, is a locked door
+   in front of the fix.

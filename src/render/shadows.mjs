@@ -123,60 +123,70 @@ export class ShadowLayer {
        shadow obeys the same tokens as the rest of the terminal. */
     this.colours = readColours();
 
-    this.syncSize();
     this.observe();
   }
 
   /* ------------------------------------------------------------------------
-     SIZING
+     SIZING — ONE NUMBER, SUPPLIED FROM OUTSIDE
 
-     The single source of truth is the CONTAINER, measured directly, and it is
-     re-measured by a ResizeObserver rather than being told about changes.
+     The shadow layer does NOT measure anything. The width and height are
+     handed to render() by the application, which reads them once and gives
+     the identical pair to the vector layer.
 
-     This is not defensive coding for its own sake. An earlier version sized
-     this surface from the map's canvas, at a moment when that canvas had not
-     yet grown to fill its container, and then never re-synchronised. Two
-     symptoms followed from that one mistake, and neither looked like a sizing
-     bug:
+     This is the third revision of this code, and the reason it ended up here
+     is worth stating, because "each component measures the container itself"
+     sounds more robust than it is.
 
-       1. The surface was physically shorter than the map, so shadows were
-          clipped along a clean horizontal line with nothing drawn below it.
+     v1.0    sized from the map's canvas, which lags its container during
+             layout, and cached the result forever.
 
-       2. viewTransform centres the projection on height / 2. With a stale
-          height that centre was too high, so every shadow was displaced
-          upward by half the discrepancy — a plausible-looking offset with no
-          error anywhere.
+     v1.1    sized from the container and observed it. Better, but still a
+             SECOND independent measurement: the vector layer computed its
+             own from map.getSize(). Two observers, two moments, two values
+             that were only ever equal by good luck.
 
-     Measuring the container and observing it makes both impossible by
-     construction. Nothing outside this class needs to know the size, and
-     nothing needs to remember to tell it.
+     Whenever those two numbers disagreed, the failure did not look like a
+     sizing fault. It looked like a geometry fault:
+
+       1. viewTransform centres the projection on height / 2, so a height
+          that is too small pushes the whole projection UPWARD by half the
+          discrepancy — a clean, plausible offset with no error anywhere.
+
+       2. Every coverage and culling test compared against the same stale
+          number, so the wash stopped along a crisp horizontal line partway
+          down the chart.
+
+     Both symptoms come from a single cause: two clocks. The fix is not a
+     better observer, it is having only one clock. The caller measures; both
+     layers are told. They cannot disagree, because there is nothing left to
+     disagree about.
+
+     The ResizeObserver survives, but its only job now is to ASK FOR A
+     REDRAW. It no longer decides anything.
      ------------------------------------------------------------------------ */
 
   observe() {
+    const request = () => { if (this.onResize) this.onResize(); };
+
     if (typeof ResizeObserver === 'undefined') {
-      /* Old browsers fall back to window resize. Less precise — it misses
-         container changes that are not viewport changes — but never stale
-         for long, because render() re-checks. */
-      window.addEventListener('resize', () => this.syncSize());
+      window.addEventListener('resize', request);
       return;
     }
 
-    this.ro = new ResizeObserver(() => {
-      if (this.syncSize() && this.onResize) this.onResize();
-    });
+    this.ro = new ResizeObserver(request);
     this.ro.observe(this.container);
   }
 
   /**
-   * Match the backing store to the container. Returns true if anything moved.
+   * Match the backing store to the size the caller is projecting against.
    *
-   * Only the backing store is set here. The displayed size comes from CSS
-   * (position: absolute; inset: 0), so the element can never disagree with
-   * its container even for a frame.
+   * Only the backing store is set. The DISPLAYED size comes from CSS
+   * (`position: absolute; inset: 0`), so the element always fills its
+   * container even in the frame before this runs.
+   *
+   * @returns {boolean} true if the backing store changed
    */
-  syncSize() {
-    const width = this.container.clientWidth;
-    const height = this.container.clientHeight;
+  syncSize(width, height) {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     if (!width || !height) return false;
@@ -193,9 +203,29 @@ export class ShadowLayer {
       c.height = Math.round(height * dpr);
     }
 
+    /* ----------------------------------------------------------------------
+       The backing store above is in DEVICE pixels. The line below fixes the
+       DISPLAY size in CSS pixels, and it is not redundant with the
+       stylesheet — it is defence in depth against a genuinely subtle rule.
+
+       A canvas is a REPLACED element. `position: absolute; inset: 0` will
+       not stretch it the way it stretches a div: CSS takes the used width
+       from the element's intrinsic size, which for a canvas is its width
+       attribute — the device-pixel figure just written. On a 2x display that
+       laid the canvas out at twice its container, anchored top-left, with
+       three quarters of it overflowing and clipped.
+
+       11-lumen-map.css declares `width: 100%; height: 100%` and is the
+       primary fix. This is the belt to that pair of braces, so a stylesheet
+       that fails to load degrades to an unstyled instrument rather than to a
+       silently wrong one.
+       ---------------------------------------------------------------------- */
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = height + 'px';
+
     /* Resizing a canvas resets its transform, so both contexts are rescaled
-       to CSS pixels every time. All drawing code works in CSS pixels and is
-       unaware of device pixel ratio. */
+       to CSS pixels every time. All drawing code below works in CSS pixels
+       and is unaware of device pixel ratio. */
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.bufferCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -206,8 +236,21 @@ export class ShadowLayer {
     if (this.ro) this.ro.disconnect();
   }
 
+  /**
+   * Wipe the visible surface.
+   *
+   * Done in DEVICE pixels over the canvas's own backing store, not in CSS
+   * pixels over a cached size. A clear that depends on a cached number can
+   * leave a band of the previous frame behind if that number is ever stale,
+   * and a stale band of old shadows is indistinguishable from a rendering
+   * bug in the projection.
+   */
   clear() {
-    this.ctx.clearRect(0, 0, this.width, this.height);
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.restore();
   }
 
   /**
@@ -217,6 +260,10 @@ export class ShadowLayer {
    * @param {Array}  opts.buildings   prepared footprints from core/buildings
    * @param {Object} opts.center      map centre {lng, lat}
    * @param {number} opts.zoom
+   * @param {number} opts.width       viewport width, CSS px — MUST be the
+   *                                  same value the vector layer projects
+   *                                  against. See the sizing note above.
+   * @param {number} opts.height      viewport height, CSS px
    * @param {number} opts.sunAzimuth  compass bearing, degrees
    * @param {number} opts.sunAltitude apparent altitude, degrees
    * @param {boolean} opts.showFootprints
@@ -225,14 +272,12 @@ export class ShadowLayer {
   render(opts) {
     const {
       buildings, center, zoom,
+      width, height,
       sunAzimuth, sunAltitude,
       showFootprints = true
     } = opts;
 
-    /* Cheap guard against drawing into a surface that no longer matches the
-       map. The ResizeObserver normally gets here first; this catches the
-       frame in between. */
-    this.syncSize();
+    this.syncSize(width, height);
 
     this.clear();
 
@@ -257,11 +302,20 @@ export class ShadowLayer {
     const bctx = this.bufferCtx;
 
     /* Flood the whole surface with sunlight, then cut the shadows out of it.
-       Everything the wash still covers at the end is lit. */
+       Everything the wash still covers at the end is lit.
+
+       The flood runs in DEVICE pixels across the buffer's own backing store,
+       deliberately bypassing the CSS-pixel transform and every cached
+       dimension. Coverage is then a property of the canvas itself and cannot
+       be partial — which is precisely the failure this replaced, where the
+       wash stopped along a crisp horizontal line partway down the chart. */
     bctx.globalCompositeOperation = 'source-over';
-    bctx.clearRect(0, 0, this.width, this.height);
+    bctx.save();
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.clearRect(0, 0, this.buffer.width, this.buffer.height);
     bctx.fillStyle = this.colours.light;
-    bctx.fillRect(0, 0, this.width, this.height);
+    bctx.fillRect(0, 0, this.buffer.width, this.buffer.height);
+    bctx.restore();
 
     /* destination-out erases wherever we draw, regardless of fill colour.
        Erasing the same pixel twice erases it once, which is precisely the
