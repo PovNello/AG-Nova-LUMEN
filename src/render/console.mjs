@@ -238,7 +238,7 @@ export class Console {
       this.set('estimated', EM_DASH);
       this.set('confidence', EM_DASH);
       this.set('modelState', `ZOOM IN TO ${MIN_SHADOW_ZOOM} FOR SURFACE DATA`);
-      this.setClass('modelState', 'lumen-model-state is-idle');
+      this.setClass('modelState', 'nova-panel__state lumen-model-state is-idle');
       return;
     }
 
@@ -249,13 +249,13 @@ export class Console {
 
     if (st.truncated) {
       this.set('modelState', 'STRUCTURE LIMIT REACHED \u00B7 ZOOM IN');
-      this.setClass('modelState', 'lumen-model-state is-warning');
+      this.setClass('modelState', 'nova-panel__state lumen-model-state is-warning');
     } else if (st.total === 0) {
       this.set('modelState', 'NO STRUCTURES IN VIEW');
-      this.setClass('modelState', 'lumen-model-state is-idle');
+      this.setClass('modelState', 'nova-panel__state lumen-model-state is-idle');
     } else {
       this.set('modelState', 'SURFACE MODEL ACQUIRED');
-      this.setClass('modelState', 'lumen-model-state is-ok');
+      this.setClass('modelState', 'nova-panel__state lumen-model-state is-ok');
     }
   }
 

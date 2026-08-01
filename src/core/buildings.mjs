@@ -40,12 +40,12 @@ export const STOREY_HEIGHT_M = 3.1;
 
 /* Below this zoom the building layer is not present in the vector tiles at
    all, so shadows are switched off rather than silently drawn from nothing. */
-export const MIN_SHADOW_ZOOM = 15;
+export const MIN_SHADOW_ZOOM = 15.8;
 
 /* Hard ceiling on the number of footprints processed in one pass. Reached
    only in very dense cities at wide zoom. When it bites, the interface says
    so instead of quietly truncating. */
-export const MAX_BUILDINGS = 4000;
+export const MAX_BUILDINGS = 12000;
 
 /* Any tile height at or below this is treated as a schema default rather than
    a surveyed value. See the note in LIMITATIONS.md: vector tiles do not carry
