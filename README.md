@@ -40,9 +40,10 @@ That is the whole build process. There isn't one.
 node tools/verify-astro.mjs      # ephemerides vs an independent NOAA implementation
 node tools/verify-geometry.mjs   # projection, hull, ray casting, exposure scenarios
 node tools/verify-wiring.mjs     # markup/module/stylesheet contracts
+node tools/verify-contrast.mjs   # perceptual separability of light and shadow
 ```
 
-All three must pass. See **Verification** below for what they actually prove.
+All four must pass. See **Verification** below for what they actually prove.
 
 ---
 
@@ -84,6 +85,7 @@ lumen/
 │   └── app.mjs                 wiring only
 ├── tools/                      fetch and verification harnesses
 └── docs/
+    ├── COLOUR.md               why the chart paints light and not shadow
     ├── LIMITATIONS.md          what this instrument does not know
     └── VENDOR.lock             what is actually in assets/vendor/
 ```
@@ -156,9 +158,30 @@ The instrument computes its own ephemerides rather than importing a library, so 
 - Convex hull, ray/polygon intersection, grazing misses, point-in-polygon.
 - Constructed exposure scenarios with known answers: an open field is lit from sunrise to sunset; a tall wall due south removes the middle of the day and leaves light at both ends; a wall to the north blocks the low summer sun but not the winter sun; light decreases monotonically as a wall grows and increases as it recedes; standing inside a footprint yields no direct sun; the whole thing mirrors correctly in the southern hemisphere.
 
-`tools/verify-wiring.mjs` — **35 checks**
+`tools/verify-contrast.mjs` — **23 checks**
+
+The chart paints **light**, not shadow: the ground is dark, sunlit areas take a
+warm ivory wash, and shadow is bare ground showing through. This harness reads
+the actual palette out of the style file and the tokens, composites it the way
+the canvas does, and measures the result in CIE L\* and WCAG contrast ratio.
+
+It exists because v1.0 shipped with a shadow colour identical to the ground
+colour — a contrast ratio of exactly 1.000:1, invisible on every street in the
+world, and passed by every other test. It checks the perceptual step between lit
+and shadowed ground, the evenness of the full six-tone ladder, that the chassis
+has not drifted, that every overlay stays legible over both ground states, that
+the estimated-height marker remains visible, and that the renderer is still
+flooding light rather than filling shadow. Every check was mutation-tested
+against the original defect.
+
+`tools/verify-wiring.mjs` — **48 checks**
 
 There is no type checker, so a rename between the markup and the modules produces no error at all — just a readout that quietly never updates. This harness reads both as text and checks they agree: every telemetry field written is present and every field present is written; every control has a handler; every runtime CSS class is defined; the map style contains the layer the shadow engine queries; every host used by the style is declared in `services.js`; the north-up and no-pitch locks are still in place; and the design system rules hold — no raw colours outside the tokens file, no rounded corners, no glow, no gradient fills.
+
+It also checks **itself**. The harnesses are cross-platform code and were not,
+at first: filesystem paths were split on `/`, which reported every module in
+the project as orphaned when run on Windows. A verification tool that raises
+false alarms is worse than none, because the next real failure gets dismissed.
 
 ---
 

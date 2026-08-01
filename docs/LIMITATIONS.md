@@ -53,29 +53,37 @@ Bologna is fine. San Francisco is not. Perugia and Assisi, notably, are not.
 
 Correcting this properly requires projecting each shadow polygon onto a terrain model, which is a different engine — see §5.
 
-### 2.2 Overlapping footprints use a convex hull
+### 2.2 The chart shows light, not shadow
+
+Worth knowing when reading the chart: the warm wash marks where direct sunlight
+reaches. Shadow is the bare map showing through. A region that looks "unpainted"
+is not missing data — it is the answer.
+
+Full reasoning in `COLOUR.md`.
+
+### 2.3 Overlapping footprints use a convex hull
 
 The silhouette a building throws is computed as the convex hull of its footprint and the same footprint translated away from the sun. For a rectangular building this is exact. For an L-shaped or U-shaped building it slightly **overstates** the shadow, filling the notch.
 
 The alternative is a true polygon union, which needs a robust boolean geometry library and a great deal of care with degenerate input. Given that the input heights are frequently guessed to the nearest storey, hull approximation is nowhere near the dominant error.
 
-### 2.3 Only what is on the chart casts a shadow
+### 2.4 Only what is on the chart casts a shadow
 
 Buildings outside the visible viewport are not loaded and therefore do not cast shadows into it. A tower two streets beyond the edge of the screen will not darken the spot you are inspecting.
 
 **Mitigation:** zoom out to bring more structures into the calculation, then zoom back in. The same limitation applies to ShadeMap and to every viewport-bounded implementation.
 
-### 2.4 Shadows are switched off below zoom 15
+### 2.5 Shadows are switched off below zoom 15
 
 The building layer is not present in the vector tiles at wider zooms. Rather than draw shadows from nothing, the engine disables itself and the console says so.
 
-### 2.5 Grazing incidence is clamped
+### 2.6 Grazing incidence is clamped
 
 As the sun approaches the horizon, shadow length tends to infinity. Below 1.5° of altitude, length is clamped to 4 km and the readout is flagged `GRAZING INCIDENCE`. Drawings in that regime are truncated, and the flat-ground assumption has long since stopped holding anyway.
 
 Below 0° no shadows are drawn at all. This is an explicit guard, not an accident of the maths.
 
-### 2.6 Mercator distortion
+### 2.7 Mercator distortion
 
 Shadow length is converted from metres to pixels using the scale at **each building's own latitude**, not at the map centre. Across a full-screen view at high latitude the difference reaches several per cent, and using a single figure would show shadows visibly growing towards one edge of the screen.
 

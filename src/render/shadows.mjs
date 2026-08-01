@@ -1,5 +1,5 @@
 /* ==========================================================================
-   L.U.M.E.N. — RENDER / SHADOWS
+   L.U.M.E.N. — RENDER / LIGHT
    The projection engine. A canvas laid over the map.
 
    ---------------------------------------------------------------------------
@@ -10,7 +10,7 @@
    For each building, every footprint vertex is duplicated and pushed away
    from the sun by a distance of height / tan(altitude). The convex hull of
    the original and the pushed copy is the silhouette that building throws on
-   flat ground. Fill it.
+   flat ground.
 
    This is elementary trigonometry, it runs on any phone, and on level urban
    ground it is accurate. The competition uses GPU ray casting because they
@@ -18,18 +18,54 @@
    machinery would buy nothing.
 
    ---------------------------------------------------------------------------
-   THE COMPOSITING TRICK
+   THE INVERSION — WHY THIS FILE PAINTS LIGHT AND NOT SHADOW
    ---------------------------------------------------------------------------
-   Drawing translucent shadows one by one makes overlaps stack into ever
-   darker blobs, which is physically wrong — a point is either lit or it is
-   not — and reads as a rendering bug.
+   v1.0 filled the silhouettes with a dark colour and composited them over the
+   map. That was wrong, and not subtly:
 
-   The fix is a second canvas. Every silhouette is filled at FULL opacity on
-   an offscreen surface, so overlaps merge into a single flat region, and the
-   whole surface is then composited onto the map once at a single alpha.
+     the shadow colour was --nova-space,  #08111B
+     the map's ground colour was          #08111B
+
+   Identical. Contrast ratio 1.000:1. On open ground — a street, a square,
+   exactly where a photographer needs the answer — the shadow was
+   mathematically invisible. It only appeared where it happened to fall on a
+   building, because buildings were lighter than the ground.
+
+   Darkening further was not available either. At L* 4.8 the ground was
+   already 1.4 points off absolute black. The bottom of the scale was spent.
+
+   So the sign is flipped. The ground stays dark; the SUNLIT area receives a
+   warm wash; and shadow is simply ground that the wash never reached.
+
+   Three things follow, and all three are improvements rather than
+   consolations:
+
+     1. Twelve points of L* of separation instead of zero, without lightening
+        the interface by a single step. The dark stays dark — it just means
+        something now.
+
+     2. It is what an instrument does. A radar does not dim where there is no
+        return; it illuminates where there is one. Painting the absence of a
+        signal was the wrong metaphor for a device called L.U.M.E.N.
+
+     3. Building roofs can be lit while their bodies stay dark, which is both
+        physically right in plan view and the thing that makes the city read
+        as solid mass rather than as flat cutouts.
+
+   ---------------------------------------------------------------------------
+   THE COMPOSITING TRICK, WHICH SURVIVES THE INVERSION
+   ---------------------------------------------------------------------------
+   Overlapping shadows must not stack. A point is lit or it is not; there is
+   no "twice as shadowed".
+
+   An offscreen surface is flooded with the wash at full opacity, then every
+   silhouette is ERASED from it with destination-out. Overlaps collapse into
+   one hole because erasing twice erases the same pixels. The whole surface is
+   then composited onto the map once, at a single alpha.
 
    This is why no polygon-union library appears in the dependency list. The
-   union is performed by the rasteriser, for free.
+   union is performed by the rasteriser, for free — exactly as before, only
+   now in the negative.
    ========================================================================== */
 
 import {
@@ -51,8 +87,11 @@ export const GRAZING_ALTITUDE_DEG = 1.5;
    Scaling with the view keeps the clamp meaningful everywhere. */
 const MAX_SHADOW_DIAGONALS = 1.5;
 
-/* Single alpha applied to the whole merged shadow layer. */
-const SHADOW_ALPHA = 0.62;
+/* Strength of the sunlight wash. Tuned so that lit ground sits roughly 12
+   points of L* above shadowed ground: enough to read instantly at arm's
+   length, not so much that the chart stops looking like a night instrument.
+   See docs/COLOUR.md for the measured ladder. */
+const LIGHT_ALPHA = 0.17;
 
 export class ShadowLayer {
   /**
@@ -216,8 +255,19 @@ export class ShadowLayer {
     const tanAlt = Math.tan(effectiveAlt * Math.PI / 180);
 
     const bctx = this.bufferCtx;
+
+    /* Flood the whole surface with sunlight, then cut the shadows out of it.
+       Everything the wash still covers at the end is lit. */
+    bctx.globalCompositeOperation = 'source-over';
     bctx.clearRect(0, 0, this.width, this.height);
-    bctx.fillStyle = this.colours.shadow;
+    bctx.fillStyle = this.colours.light;
+    bctx.fillRect(0, 0, this.width, this.height);
+
+    /* destination-out erases wherever we draw, regardless of fill colour.
+       Erasing the same pixel twice erases it once, which is precisely the
+       union semantics overlapping shadows require. */
+    bctx.globalCompositeOperation = 'destination-out';
+    bctx.fillStyle = '#000';
 
     /* Generous margin: a building well off screen can still cast a shadow
        across the visible area. */
@@ -226,6 +276,10 @@ export class ShadowLayer {
 
     const maxLengthPx =
       Math.hypot(this.width, this.height) * MAX_SHADOW_DIAGONALS;
+
+    /* Footprints that survived the visibility cull, kept so their roofs can
+       be restored after the shadows have been erased. */
+    const visibleBuildings = [];
 
     for (const b of buildings) {
       /* Metres per pixel at THIS building's latitude, not the map centre's.
@@ -268,12 +322,41 @@ export class ShadowLayer {
       bctx.closePath();
       bctx.fill();
 
+      /* Remember the visible footprints; roofs are restored below. */
+      visibleBuildings.push({ b, pts, n });
+
       drawn++;
     }
 
-    /* One composite, one alpha. Overlaps are already merged. */
+    /* ----------------------------------------------------------------------
+       ROOFS
+
+       The swept hull necessarily contains the footprint itself, so the step
+       above erased the roof along with the shadow. In plan view that is
+       wrong: a roof under an open sky is the most brightly lit surface on
+       screen, not a shadowed one.
+
+       Painting it back is what makes the city read as solid volumes catching
+       light rather than as flat holes. The basemap keeps the building body
+       dark, so the result is a dark mass with a lit lid — which is exactly
+       what a building looks like from above.
+       ---------------------------------------------------------------------- */
+    bctx.globalCompositeOperation = 'source-over';
+    bctx.fillStyle = this.colours.light;
+
+    for (const { pts, n } of visibleBuildings) {
+      bctx.beginPath();
+      bctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < n; i++) bctx.lineTo(pts[i].x, pts[i].y);
+      bctx.closePath();
+      bctx.fill();
+    }
+
+    bctx.globalCompositeOperation = 'source-over';
+
+    /* One composite, one alpha. Overlaps were merged by the eraser. */
     this.ctx.save();
-    this.ctx.globalAlpha = SHADOW_ALPHA;
+    this.ctx.globalAlpha = LIGHT_ALPHA;
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.drawImage(this.buffer, 0, 0);
     this.ctx.restore();
@@ -335,10 +418,17 @@ function readColours() {
   const get = (name, fallback) => (s.getPropertyValue(name).trim() || fallback);
 
   return {
-    /* Shadow is the absence of light, so it is drawn in the structural void
-       colour rather than in an accent. It spends none of the accent budget. */
-    shadow: get('--nova-space', '#08111B'),
-    footprint: get('--nova-grid', '#22374D'),
+    /* The colour of sunlight itself.
+
+       Ivory, the palette's "knowledge and warmth" accent, rather than a pure
+       white. White reads as a screen artefact — a blown highlight or a
+       selection overlay. A warm off-white reads as light falling on a
+       surface, which is what it is meant to be.
+
+       Note that this is the colour that gets PAINTED. There is no shadow
+       colour any more: shadow is the ground the wash never reached. */
+    light: get('--lumen-light', '#DCCFAA'),
+    footprint: get('--lumen-footprint', '#2E4A66'),
     estimated: get('--nova-orange-line', 'rgba(230,130,47,0.40)')
   };
 }

@@ -23,10 +23,43 @@
    ========================================================================== */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+
+/* --------------------------------------------------------------------------
+   PATHS
+
+   Two different kinds of string look alike in this file and must never be
+   confused:
+
+     WEB PATHS        from index.html and from import statements. Always use
+                      forward slashes, on every platform, by specification.
+                      Splitting them on '/' is correct.
+
+     FILESYSTEM PATHS built with join(). Use the platform separator, which is
+                      a backslash on Windows. Splitting them on '/' returns
+                      the whole string and every comparison silently fails.
+
+   This harness originally used split('/') for both and reported every module
+   in the project as orphaned when run on Windows — a false alarm that looked
+   exactly like a real structural fault. Filesystem paths now go through
+   basename(), which is platform-agnostic by construction.
+   -------------------------------------------------------------------------- */
+
+/**
+ * Final segment of a FILESYSTEM path. Correct on every platform.
+ *
+ * Deliberately a one-argument wrapper rather than passing `basename` around
+ * directly. Node's basename takes an optional second `suffix` argument, so
+ * `paths.map(basename)` hands it the array index and throws. Wrapping it
+ * makes `.map(fileName)` safe.
+ */
+const fileName = p => basename(p);
+
+/** Final segment of a WEB path. Always forward slashes, by specification. */
+const urlName = u => u.split('/').pop();
 
 let failures = 0;
 let checks = 0;
@@ -121,7 +154,7 @@ const cssOnDisk = readdirSync(join(ROOT, 'assets', 'css'))
 
 const cssLinked = localRefs
   .filter(r => r.startsWith('assets/css/'))
-  .map(r => r.split('/').pop());
+  .map(urlName);
 
 const unlinkedCss = cssOnDisk.filter(f => !cssLinked.includes(f));
 
@@ -142,26 +175,107 @@ expect('Tokens are the first stylesheet loaded',
 const entry = readFileSync(join(ROOT, 'src', 'app.mjs'), 'utf8');
 const reachable = new Set(['app.mjs']);
 
-function follow(file, text) {
+function follow(text) {
+  /* Import specifiers are web paths: always forward slashes. */
   for (const m of text.matchAll(/from\s+'([^']+\.mjs)'/g)) {
-    const name = m[1].split('/').pop();
+    const name = urlName(m[1]);
     if (reachable.has(name)) continue;
     reachable.add(name);
-    const found = sourceFiles.find(f => f.endsWith('/' + name));
-    if (found) follow(found, readFileSync(found, 'utf8'));
+
+    /* The lookup is a filesystem comparison. */
+    const found = sourceFiles.find(f => fileName(f) === name);
+    if (found) follow(readFileSync(found, 'utf8'));
   }
 }
-follow('app.mjs', entry);
+follow(entry);
 
 const orphanModules = sourceFiles
   .filter(f => f.endsWith('.mjs'))
-  .map(f => f.split('/').pop())
+  .map(fileName)
   .filter(f => !reachable.has(f));
 
 expect(
   `Every module is reachable from app.mjs (${reachable.size} reached)`,
   orphanModules.length === 0,
   'orphaned: ' + orphanModules.join(', ')
+);
+
+/* Sanity: the traversal must actually reach every module on disk. If this
+   count and the file count disagree, the walk is broken rather than the
+   project. Reported separately so a traversal fault cannot masquerade as a
+   structural one. */
+const moduleCount = sourceFiles.filter(f => f.endsWith('.mjs')).length;
+expect(
+  `Traversal reached every module on disk (${moduleCount} on disk)`,
+  reachable.size === moduleCount,
+  `reached ${reachable.size} of ${moduleCount} — the traversal is at fault, not the code`
+);
+
+/* ---------------------------------------------------------------------------
+   THE HARNESS ITSELF MUST BE PORTABLE
+
+   This file reported every module in the project as orphaned when run on
+   Windows. Nothing was wrong with the project: filesystem paths built by
+   join() use a backslash there, and the harness was splitting them on '/',
+   so every comparison failed and the failure looked exactly like a genuine
+   structural fault.
+
+   A verification tool that cries wolf is worse than no tool, because the
+   next real failure gets waved away. So the tools are checked too.
+   --------------------------------------------------------------------------- */
+
+const toolSources = readdirSync(join(ROOT, 'tools'))
+  .filter(f => f.endsWith('.mjs'))
+  .map(f => [f, readFileSync(join(ROOT, 'tools', f), 'utf8')]);
+
+const pathOffenders = [];
+
+for (const [name, text] of toolSources) {
+  text.split('\n').forEach((line, i) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('*') || trimmed.startsWith('//') || trimmed.startsWith('/*')) return;
+
+    /* Splitting a variable named like a filesystem path on a forward slash,
+       or comparing the end of one against '/name'. Web paths are exempt and
+       go through urlName(). */
+    if (/\b(file|files|sourceFiles|cssFiles|f|p)\b\s*\.split\('\/'\)/.test(line) ||
+        /endsWith\('\/'\s*\+/.test(line)) {
+      pathOffenders.push(`${name}:${i + 1}  ${trimmed}`);
+    }
+  });
+}
+
+expect(
+  'Verification tools use basename() for filesystem paths, not split(\'/\')',
+  pathOffenders.length === 0,
+  pathOffenders.join('\n       ')
+);
+
+/* Passing `basename` straight to .map() hands it the array index as its
+   optional `suffix` argument, and it throws. The fileName wrapper exists
+   precisely to prevent this.
+
+   The pattern is assembled at runtime rather than written as a literal,
+   because a source-scanning check that contains the string it is looking for
+   will always find itself. That is not a hypothetical: the first version of
+   this check failed on this very file. */
+const unsafeMapPattern = new RegExp('\\.map\\(' + 'basename' + '\\)');
+
+/* Comments are skipped as well as literals. A source scanner that reads its
+   own documentation as evidence is a scanner that can never be documented. */
+const unsafeMaps = toolSources
+  .filter(([, text]) => text.split('\n').some(line => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('*') || trimmed.startsWith('//') ||
+        trimmed.startsWith('/*')) return false;
+    return unsafeMapPattern.test(line);
+  }))
+  .map(([name]) => name);
+
+expect(
+  'No bare .map of Node\'s basename — it receives the index as a suffix',
+  unsafeMaps.length === 0,
+  unsafeMaps.join(', ')
 );
 
 /* ==========================================================================
@@ -288,7 +402,7 @@ expect(
 
 section('5. DESIGN SYSTEM COMPLIANCE');
 
-const nonTokenCss = cssFiles.filter(f => !f.endsWith('01-tokens.css'));
+const nonTokenCss = cssFiles.filter(f => fileName(f) !== '01-tokens.css');
 
 /* Three documented exceptions, and no others:
 
@@ -323,7 +437,7 @@ for (const f of nonTokenCss) {
 
     const m = /#[0-9a-fA-F]{3,8}\b/.exec(line);
     if (m && !line.includes('lumen-chrono__band') && !line.includes('#0a1420')) {
-      rawColours.push(`${f.split('/').pop()}: ${trimmed}`);
+      rawColours.push(`${fileName(f)}: ${trimmed}`);
     }
 
     if (inPrintBlock && printDepth <= 0) inPrintBlock = false;

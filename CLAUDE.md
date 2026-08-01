@@ -39,14 +39,26 @@ a bad change. So is the reverse.
 
 5. **Every external URL lives in `src/config/services.js`.** Nowhere else.
 
-6. **All three verification harnesses must pass** before anything ships:
+6. **All four verification harnesses must pass** before anything ships:
    ```
    node tools/verify-astro.mjs
    node tools/verify-geometry.mjs
    node tools/verify-wiring.mjs
+   node tools/verify-contrast.mjs
    ```
 
-7. **Motion is a layer.** Deleting `04-animations.css` must leave a fully
+7. **The chart paints LIGHT, never shadow.** There is no shadow colour. The
+   ground is dark, sunlit areas get a warm wash, and shadow is bare ground
+   showing through. If you are adding a `--lumen-shadow` token, read
+   `docs/COLOUR.md` first — v1.0 did exactly that and shipped shadows with a
+   contrast ratio of 1.000:1.
+
+8. **On the chart, buildings are DARKER than the ground.** Inverted relative
+   to a normal dark basemap, deliberately: the ground is the stage that
+   shadows are drawn on and needs headroom above it, while buildings are the
+   solid masses doing the casting.
+
+9. **Motion is a layer.** Deleting `04-animations.css` must leave a fully
    functional static instrument.
 
 ---
@@ -72,7 +84,7 @@ Colour is **semantic and not interchangeable**:
 | `--nova-orange` | in progress / warning | estimated heights, golden hour, sunrise/sunset bearings |
 | `--nova-ivory` | knowledge / archive | N.O.V.A.'s voice, the moon |
 | `--nova-danger` | genuine failure only | never decorative |
-| `--nova-space` | structure | **cast shadow**, because shadow is absence of light |
+| `--lumen-light` | sunlight on the chart | the wash painted over sunlit ground and roofs |
 
 Roughly 80% structure and text, 15% ivory, 5% cyan and orange combined. If
 everything is cyan it reads as generic UI.
@@ -215,3 +227,73 @@ dependent one observe rather than wait to be told.
 Each new check was verified by reintroducing the original defect and confirming
 the harness fails. A check that passes but would not have caught the bug is
 worse than no check, because it is reassuring.
+
+
+### 3. Shadows were invisible on open ground
+
+Shipped in v1.0. The shadow fill colour was `--nova-space` `#08111B`; the map's
+ground colour was also `#08111B`. Contrast ratio **1.000:1** — painting a
+colour onto itself.
+
+Shadows appeared to work only because they were visible where they fell on
+buildings, which were lighter than the ground. On streets and squares, the one
+place the tool is asked about, there was nothing.
+
+Darkening was not an option either: at L\* 4.8 the ground was 1.4 points from
+absolute black. The bottom of the scale was spent.
+
+**Fixed by inverting the whole model** — see `docs/COLOUR.md`. Ground raised to
+mid-scale, buildings pushed below it, and the renderer flipped from filling
+shadows to flooding light and erasing shadows out of it. Result: 12.4 L\* of
+separation, with the chassis untouched.
+
+**Guard added:** `tools/verify-contrast.mjs`, 23 checks, reading the real
+palette from the real files.
+
+**Lesson:** a visual system has numeric contracts. "Does it look right" is not
+a test, least of all against a dark palette, where the eye adapts and two or
+three L\* of difference can seem present when it is not there at all. If two
+tones must be distinguishable, measure the distance between them.
+
+### 4. The verification harness itself was not portable
+
+Reported on Windows: **every module in the project listed as orphaned.**
+
+Nothing was wrong with the project. `verify-wiring.mjs` was splitting
+filesystem paths on `'/'`. On Windows `join()` emits backslashes, so
+`split('/')` returned the whole path and every comparison failed.
+
+Two symptoms, one cause:
+
+- the module traversal stopped after `app.mjs`'s direct imports, because the
+  file lookup never matched — hence "10 reached" instead of 11, with
+  `geometry.mjs` (imported only indirectly) never visited;
+- the orphan list printed full Windows paths instead of filenames, which is
+  what made it obvious in hindsight and invisible at first glance.
+
+**The distinction that matters.** Two kinds of string look alike:
+
+| | Separator | Split on `/`? |
+|---|---|---|
+| **web paths** — `index.html` refs, import specifiers | always `/`, by spec | yes — use `urlName()` |
+| **filesystem paths** — anything from `join()` | platform | never — use `fileName()` |
+
+`fileName` is a one-argument wrapper around `basename` on purpose:
+Node's `basename` takes an optional second `suffix` argument, so mapping it
+over an array hands it the index and throws.
+
+**Guards added:** the tools now scan themselves for `split('/')` on
+filesystem-path variables and for bare mapping of `basename`; and the
+traversal asserts it reached every module on disk, so a broken walk reports
+itself as a walk fault rather than as a structural one.
+
+**Two things worth carrying forward.**
+
+A source-scanning check that contains the string it searches for will find
+itself. The first version of the `basename` guard failed on its own regex
+literal, then on its own doc comment. Build such patterns at runtime and skip
+comment lines.
+
+And more importantly: **a verification tool that cries wolf is worse than no
+tool**, because the next genuine failure gets waved away. The harnesses are
+now verified too.

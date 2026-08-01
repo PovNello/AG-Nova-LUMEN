@@ -4,25 +4,25 @@
 # If a checksum here stops matching the file on disk, something changed
 # that you did not change.
 #
-# Generated 2026-08-01T14:47:18.522Z
+# Generated 2026-08-01T15:23:13.467Z
 
 maplibre-gl.js
   version  4.7.1
   licence  BSD-3-Clause
   url      https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js
   sha256   be9633c4d870e26fb37f1cfe5c5a77181667114003ea16207ac7850d8da8add1
-  status   fetched
+  status   present
 
 maplibre-gl.css
   version  4.7.1
   licence  BSD-3-Clause
   url      https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css
   sha256   576b085fdd9487a65a19215328c1e086c07ce5bf6da09b666b3806d3d008dae9
-  status   fetched
+  status   present
 
 tz-lookup.js
   version  6.1.25
   licence  CC0-1.0
   url      https://cdn.jsdelivr.net/npm/tz-lookup@6.1.25/tz.js
   sha256   906852259d2157fa80d44eaa8c170ab731ae6497a0a0a066452b79a43125c8d4
-  status   fetched
+  status   present

@@ -156,13 +156,33 @@
 
   /* ----------------------------------------------------------------------
      L.U.M.E.N. ADDITIONS
+
      The instrument introduces a domain the parent palette was not designed
-     for: cast shadow. These are derived from existing tokens rather than
-     invented, so the shadow layer remains structure and spends none of the
-     5% accent budget.
+     for: the difference between ground in sunlight and ground in shadow.
+
+     The important decision is recorded here because it is counter-intuitive
+     and easy to undo by accident. THE INSTRUMENT PAINTS LIGHT, NOT SHADOW.
+     There is no shadow colour. Shadow is the bare map showing through where
+     the sunlight wash never reached.
+
+     v1.0 did the opposite, and painted shadow in --nova-space — which was
+     also the map's ground colour. Contrast ratio 1.000:1. Every shadow on
+     open ground was invisible. See docs/COLOUR.md.
      ---------------------------------------------------------------------- */
 
-  --lumen-shadow: rgba(8, 17, 27, 0.62);
+  /* The colour of sunlight on the chart. Ivory rather than white: white
+     reads as a screen artefact, warm off-white reads as light on a surface. */
+  --lumen-light: #DCCFAA;
+
+  /* Building outline on the chart, sitting just above the raised ground. */
+  --lumen-footprint: #2E4A66;
+
+  /* The map's ground plane. Declared here for reference only — the map style
+     is a JSON file and cannot read CSS variables, so the authoritative copy
+     lives in assets/style/lumen-dark.json. If you change one, change both. */
+  --lumen-ground: #152A42;
+  --lumen-building: #0B1725;
+
   --lumen-chrono-h: 52px;
   --lumen-thumb: 26px;
 }
