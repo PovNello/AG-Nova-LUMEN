@@ -1,37 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>L.U.M.E.N. — Light &amp; Urban Mapping for Ephemeris Navigation | AG Nova Industries</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>L.U.M.E.N. // AG NOVA INDUSTRIES</title>
 
-<meta name="description" content="A free solar and lunar planning instrument for photographers. Sun and moon position, twilight and golden hour times, and building shadows drawn on the map for any place, date and hour. No account, no install.">
-<meta name="theme-color" content="#08111B">
-<meta name="color-scheme" content="dark">
+  <meta name="description"
+    content="A free solar and lunar planning instrument for photographers. Sun and moon position, twilight and golden hour times, and building shadows drawn on the map for any place, date and hour. No account, no install.">
+  <meta name="theme-color" content="#08111B">
+  <meta name="color-scheme" content="dark">
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="L.U.M.E.N. — Solar &amp; Lunar Ephemeris Instrument">
-<meta property="og:description" content="Sun and moon tracking with real building shadows. An AG Nova Industries instrument.">
-<meta property="og:site_name" content="AG Nova Industries">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="L.U.M.E.N. // AG Nova Industries">
+  <meta property="og:description"
+    content="Sun and moon tracking with real building shadows. An AG Nova Industries instrument.">
+  <meta property="og:site_name" content="AG Nova Industries">
 
-<link rel="icon" type="image/svg+xml" href="assets/img/logo.svg">
+  <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg">
 
-<link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+  <link rel="preconnect" href="https://tiles.openfreemap.org" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 
-<link rel="stylesheet" href="assets/vendor/maplibre-gl.css">
-<link rel="stylesheet" href="assets/css/01-tokens.css">
-<link rel="stylesheet" href="assets/css/02-base.css">
-<link rel="stylesheet" href="assets/css/03-components.css">
-<link rel="stylesheet" href="assets/css/04-animations.css">
-<link rel="stylesheet" href="assets/css/10-lumen-layout.css">
-<link rel="stylesheet" href="assets/css/11-lumen-map.css">
-<link rel="stylesheet" href="assets/css/12-lumen-console.css">
-<link rel="stylesheet" href="assets/css/13-lumen-responsive.css">
+  <link rel="stylesheet" href="assets/vendor/maplibre-gl.css">
+  <link rel="stylesheet" href="assets/css/01-tokens.css">
+  <link rel="stylesheet" href="assets/css/02-base.css">
+  <link rel="stylesheet" href="assets/css/03-components.css">
+  <link rel="stylesheet" href="assets/css/04-animations.css">
+  <link rel="stylesheet" href="assets/css/10-lumen-layout.css">
+  <link rel="stylesheet" href="assets/css/11-lumen-map.css">
+  <link rel="stylesheet" href="assets/css/12-lumen-console.css">
+  <link rel="stylesheet" href="assets/css/13-lumen-responsive.css">
 
-<!--
+  <!--
   ============================================================================
   L.U.M.E.N.  //  AG NOVA INDUSTRIES
   Light & Urban Mapping for Ephemeris Navigation
@@ -51,384 +55,384 @@
 
 <body>
 
-<a class="nova-skip-link" href="#console">SKIP TO TELEMETRY</a>
+  <a class="nova-skip-link" href="#console">SKIP TO TELEMETRY</a>
 
-<!-- ==========================================================================
+  <!-- ==========================================================================
      HEADER — status strip, not navigation
      ========================================================================== -->
-<header class="nova-header lumen-header">
-  <div class="nova-header__brand">
-    <!-- Intrinsic width and height as attributes, not only in CSS. An SVG with
+  <header class="nova-header lumen-header">
+    <div class="nova-header__brand">
+      <!-- Intrinsic width and height as attributes, not only in CSS. An SVG with
          a viewBox and no intrinsic size expands to fill its container, so a
          missing stylesheet turns the mark into a full-screen logo. Belt and
          braces: the CSS still governs, this only bounds the failure. -->
-    <svg class="nova-header__mark" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
-      <path d="M16 2 L29 27 H3 Z" fill="none" stroke="var(--nova-cyan)" stroke-width="2"/>
-      <circle cx="16" cy="19" r="3.4" fill="var(--nova-orange)"/>
-      <path d="M9 27 L16 13 L23 27" fill="none" stroke="var(--nova-ivory)" stroke-width="1.4" opacity="0.75"/>
-    </svg>
-    <span class="nova-header__titles">
-      <span class="nova-header__os">L.U.M.E.N.</span>
-      <span class="nova-header__sub">INSTRUMENT ARRAY // N.O.V.A. OS</span>
-    </span>
-  </div>
-
-  <span class="nova-header__divider" aria-hidden="true"></span>
-
-  <form class="lumen-search" data-search-form role="search">
-    <label class="nova-sr-only" for="search-input">Search for a place</label>
-    <input id="search-input" type="search" placeholder="LOCATE // PLACE NAME"
-           autocomplete="off" spellcheck="false">
-    <button type="submit" class="nova-btn lumen-search__go" title="Search">
-      <span aria-hidden="true">&rsaquo;</span>
-      <span class="nova-sr-only">Search</span>
-    </button>
-  </form>
-
-  <div class="nova-header__telemetry">
-    <span class="nova-readout">
-      <span class="nova-pulse" aria-hidden="true"></span>
-      <span>TRACKING</span>
-    </span>
-    <a class="lumen-home" href="https://agnovaindustries.com" target="_blank" rel="noopener">
-      AG NOVA &rsaquo;
-    </a>
-  </div>
-</header>
-
-<main class="lumen-shell">
-
-  <!-- ======================================================================
-       CHART — the map viewport
-       ====================================================================== -->
-  <section class="lumen-chart-frame" aria-label="Chart">
-    <div class="lumen-chart-frame__head">
-      <span class="nova-panel__code">CHART // PLAN VIEW // NORTH UP</span>
-      <span class="nova-panel__state" data-field="modelState">STANDBY</span>
-    </div>
-
-    <div id="chart" class="lumen-chart"></div>
-
-    <div class="lumen-chart-controls">
-      <button class="nova-btn lumen-ctl" data-action="locate" title="Centre on my position">
-        <span aria-hidden="true">&#8982;</span>
-        <span class="lumen-ctl__label">GPS</span>
-      </button>
-      <button class="nova-btn lumen-ctl" data-action="zoom-in" title="Zoom in">
-        <span aria-hidden="true">+</span>
-        <span class="nova-sr-only">Zoom in</span>
-      </button>
-      <button class="nova-btn lumen-ctl" data-action="zoom-out" title="Zoom out">
-        <span aria-hidden="true">&minus;</span>
-        <span class="nova-sr-only">Zoom out</span>
-      </button>
-      <button class="nova-btn lumen-ctl" data-toggle="shadowsEnabled" title="Toggle shadow projection">
-        <span class="lumen-ctl__label">SHDW</span>
-      </button>
-      <button class="nova-btn lumen-ctl" data-action="share" title="Copy a link to this plan">
-        <span class="lumen-ctl__label">LINK</span>
-      </button>
-    </div>
-
-    <p class="lumen-status" data-status hidden></p>
-
-    <div class="lumen-attribution">
-      <span id="map-attribution"></span>
-    </div>
-  </section>
-
-  <!-- ======================================================================
-       CHRONOMETER
-       ====================================================================== -->
-  <section class="lumen-chrono" data-chrono aria-label="Chronometer">
-    <div class="lumen-chrono__head">
-      <button class="nova-btn lumen-chrono__step" data-action="day-prev" title="Previous day">
-        <span aria-hidden="true">&lsaquo;</span><span class="nova-sr-only">Previous day</span>
-      </button>
-
-      <div class="lumen-chrono__date">
-        <span class="lumen-chrono__date-label" data-date-label>&mdash;</span>
-        <label class="nova-sr-only" for="date-input">Date</label>
-        <input id="date-input" type="date" data-date-input>
-      </div>
-
-      <button class="nova-btn lumen-chrono__step" data-action="day-next" title="Next day">
-        <span aria-hidden="true">&rsaquo;</span><span class="nova-sr-only">Next day</span>
-      </button>
-
-      <button class="nova-btn lumen-chrono__now" data-action="now" title="Jump to now">NOW</button>
-    </div>
-
-    <div class="lumen-chrono__track" data-chrono-track>
-      <div class="lumen-chrono__bands" data-chrono-bands aria-hidden="true"></div>
-      <div class="lumen-chrono__ticks" data-chrono-ticks aria-hidden="true"></div>
-      <div class="lumen-chrono__markers" data-chrono-markers></div>
-      <div class="lumen-chrono__thumb" data-chrono-thumb aria-hidden="true"></div>
-
-      <label class="nova-sr-only" for="chrono-input">Time of day</label>
-      <input id="chrono-input" class="lumen-chrono__input" data-chrono-input
-             type="range" min="0" max="1439" step="1" value="720">
-    </div>
-
-    <div class="lumen-chrono__readouts">
-      <span class="lumen-chrono__clock" data-chrono-readout>12:00</span>
-      <span class="lumen-chrono__zone">
-        <span data-field="zone">&mdash;</span>
-        <span class="lumen-chrono__sep">&middot;</span>
-        <span data-field="offset">&mdash;</span>
-        <span class="lumen-chrono__sep">&middot;</span>
-        <span data-field="clockUtc">&mdash;</span> UTC
+      <svg class="nova-header__mark" viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+        <path d="M16 2 L29 27 H3 Z" fill="none" stroke="var(--nova-cyan)" stroke-width="2" />
+        <circle cx="16" cy="19" r="3.4" fill="var(--nova-orange)" />
+        <path d="M9 27 L16 13 L23 27" fill="none" stroke="var(--nova-ivory)" stroke-width="1.4" opacity="0.75" />
+      </svg>
+      <span class="nova-header__titles">
+        <span class="nova-header__os">L.U.M.E.N.</span>
+        <span class="nova-header__sub">INSTRUMENT ARRAY // N.O.V.A. OS</span>
       </span>
     </div>
 
-    <p class="lumen-zone-warning" data-field="zoneWarning" hidden>
-      TIMEZONE LOOKUP UNAVAILABLE. TIMES SHOWN USE THIS DEVICE'S ZONE, NOT THE
-      PIN'S. VERIFY BEFORE PLANNING TRAVEL.
-    </p>
-  </section>
+    <span class="nova-header__divider" aria-hidden="true"></span>
 
-  <!-- ======================================================================
-       CONSOLE — telemetry
+    <form class="lumen-search" data-search-form role="search">
+      <label class="nova-sr-only" for="search-input">Search for a place</label>
+      <input id="search-input" type="search" placeholder="LOCATE // PLACE NAME" autocomplete="off" spellcheck="false">
+      <button type="submit" class="nova-btn lumen-search__go" title="Search">
+        <span aria-hidden="true">&rsaquo;</span>
+        <span class="nova-sr-only">Search</span>
+      </button>
+    </form>
+
+    <div class="nova-header__telemetry">
+      <span class="nova-readout">
+        <span class="nova-pulse" aria-hidden="true"></span>
+        <span>TRACKING</span>
+      </span>
+      <a class="lumen-home" href="https://agnovaindustries.com" target="_blank" rel="noopener">
+        AG NOVA &rsaquo;
+      </a>
+    </div>
+  </header>
+
+  <main class="lumen-shell">
+
+    <!-- ======================================================================
+       CHART — the map viewport
        ====================================================================== -->
-  <div class="lumen-console" id="console" data-console>
+    <section class="lumen-chart-frame" aria-label="Chart">
+      <div class="lumen-chart-frame__head">
+        <span class="nova-panel__code">CHART // PLAN VIEW // NORTH UP</span>
+        <span class="nova-panel__state" data-field="modelState">STANDBY</span>
+      </div>
 
-    <!-- SOLAR -->
-    <section class="nova-panel nova-panel--cyan" style="--panel-index:0">
-      <div class="nova-panel__head">
-        <span class="nova-panel__code">SOL // LIVE TELEMETRY</span>
-        <span class="nova-panel__state" data-field="sunState">&mdash;</span>
-      </div>
-      <div class="nova-panel__body nova-panel__body--tight">
-        <div class="lumen-hero">
-          <span class="lumen-hero__value" data-field="clock">&mdash;&mdash;:&mdash;&mdash;</span>
-          <span class="lumen-hero__unit">LOCAL AT PIN</span>
-        </div>
-        <div class="nova-data">
-          <div class="nova-data__row">
-            <span class="nova-data__label">AZIMUTH</span>
-            <span class="nova-data__value" data-field="sunAz">&mdash;</span>
-            <span class="lumen-compass" data-field="sunAzLabel">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">ALTITUDE</span>
-            <span class="nova-data__value" data-field="sunAlt">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">SHADOW LENGTH</span>
-            <span class="nova-data__value" data-field="shadowRatio">&mdash;</span>
-          </div>
-        </div>
-      </div>
-    </section>
+      <div id="chart" class="lumen-chart"></div>
 
-    <!-- LUNAR -->
-    <section class="nova-panel nova-panel--ivory" style="--panel-index:1">
-      <div class="nova-panel__head">
-        <span class="nova-panel__code">LUN // LIVE TELEMETRY</span>
-        <span class="nova-panel__state" data-field="moonState">&mdash;</span>
-      </div>
-      <div class="nova-panel__body nova-panel__body--tight">
-        <div class="nova-data">
-          <div class="nova-data__row">
-            <span class="nova-data__label">PHASE</span>
-            <span class="nova-data__value" data-field="moonPhase">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">ILLUMINATED</span>
-            <span class="nova-data__value" data-field="moonFraction">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">AZIMUTH</span>
-            <span class="nova-data__value" data-field="moonAz">&mdash;</span>
-            <span class="lumen-compass" data-field="moonAzLabel">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">ALTITUDE</span>
-            <span class="nova-data__value" data-field="moonAlt">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">DISTANCE</span>
-            <span class="nova-data__value" data-field="moonDistance">&mdash;</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PIN -->
-    <section class="nova-panel" style="--panel-index:2">
-      <div class="nova-panel__head">
-        <span class="nova-panel__code">PIN // TELEMETRY REFERENCE</span>
-      </div>
-      <div class="nova-panel__body nova-panel__body--tight">
-        <div class="nova-data">
-          <div class="nova-data__row">
-            <span class="nova-data__label">LATITUDE</span>
-            <span class="nova-data__value" data-field="lat">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">LONGITUDE</span>
-            <span class="nova-data__value" data-field="lng">&mdash;</span>
-          </div>
-        </div>
-        <p class="lumen-hint">TAP THE CHART TO MOVE THE PIN.</p>
-      </div>
-    </section>
-
-    <!-- EXPOSURE PROFILE -->
-    <section class="nova-panel nova-panel--cyan lumen-panel--wide" style="--panel-index:3">
-      <div class="nova-panel__head">
-        <span class="nova-panel__code">SOLAR EXPOSURE PROFILE</span>
-        <span class="nova-panel__state" data-field="exposureState">&mdash;</span>
-      </div>
-      <div class="nova-panel__body nova-panel__body--tight">
-        <div class="lumen-exposure" data-exposure-bar aria-hidden="true"></div>
-        <div class="lumen-exposure__scale" aria-hidden="true">
-          <span>00</span><span>06</span><span>12</span><span>18</span><span>24</span>
-        </div>
-
-        <div class="nova-data lumen-exposure__totals">
-          <div class="nova-data__row">
-            <span class="nova-data__label">DIRECT LIGHT</span>
-            <span class="nova-data__value nova-data__value--nominal" data-field="exposureTotal">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">OBSTRUCTED</span>
-            <span class="nova-data__value" data-field="exposureShaded">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">DAYLIGHT</span>
-            <span class="nova-data__value" data-field="exposureDaylight">&mdash;</span>
-          </div>
-        </div>
-
-        <div class="lumen-windows" data-windows></div>
-      </div>
-      <div class="nova-panel__foot">
-        SAMPLED EVERY 10 MIN // RADIUS 1200 M // FLAT GROUND ASSUMED
-      </div>
-    </section>
-
-    <!-- EVENT TIMELINE -->
-    <section class="nova-panel nova-panel--orange" style="--panel-index:4">
-      <div class="nova-panel__head">
-        <span class="nova-panel__code">EVENT SEQUENCE // LOCAL DAY</span>
-      </div>
-      <div class="nova-panel__body nova-panel__body--tight">
-        <div class="nova-data" data-timeline></div>
-      </div>
-    </section>
-
-    <!-- SURFACE MODEL -->
-    <section class="nova-panel" style="--panel-index:5">
-      <div class="nova-panel__head">
-        <span class="nova-panel__code">SURFACE MODEL // CONFIDENCE</span>
-      </div>
-      <div class="nova-panel__body nova-panel__body--tight">
-        <div class="nova-data">
-          <div class="nova-data__row">
-            <span class="nova-data__label">STRUCTURES LOADED</span>
-            <span class="nova-data__value" data-field="structures">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">HEIGHT MEASURED</span>
-            <span class="nova-data__value nova-data__value--nominal" data-field="measured">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">HEIGHT ESTIMATED</span>
-            <span class="nova-data__value nova-data__value--elevated" data-field="estimated">&mdash;</span>
-          </div>
-          <div class="nova-data__row">
-            <span class="nova-data__label">MODEL CONFIDENCE</span>
-            <span class="nova-data__value" data-field="confidence">&mdash;</span>
-          </div>
-        </div>
-        <p class="lumen-hint">
-          STRUCTURES WITH AN ORANGE OUTLINE HAVE AN INFERRED HEIGHT.
-          THEIR SHADOWS REST ON AN ASSUMPTION.
-        </p>
-      </div>
-    </section>
-
-    <!-- LIMITATIONS -->
-    <section class="nova-panel nova-panel--ivory lumen-panel--wide" style="--panel-index:6">
-      <div class="nova-panel__head">
-        <span class="nova-panel__code">MODEL LIMITATIONS</span>
-        <button class="lumen-collapse" data-collapse="limitations" aria-expanded="false">
-          EXPAND
+      <div class="lumen-chart-controls">
+        <button class="nova-btn lumen-ctl" data-action="locate" title="Centre on my position">
+          <span aria-hidden="true">&#8982;</span>
+          <span class="lumen-ctl__label">GPS</span>
+        </button>
+        <button class="nova-btn lumen-ctl" data-action="zoom-in" title="Zoom in">
+          <span aria-hidden="true">+</span>
+          <span class="nova-sr-only">Zoom in</span>
+        </button>
+        <button class="nova-btn lumen-ctl" data-action="zoom-out" title="Zoom out">
+          <span aria-hidden="true">&minus;</span>
+          <span class="nova-sr-only">Zoom out</span>
+        </button>
+        <button class="nova-btn lumen-ctl" data-toggle="shadowsEnabled" title="Toggle shadow projection">
+          <span class="lumen-ctl__label">SHDW</span>
+        </button>
+        <button class="nova-btn lumen-ctl" data-action="share" title="Copy a link to this plan">
+          <span class="lumen-ctl__label">LINK</span>
         </button>
       </div>
-      <div class="nova-panel__body" id="limitations" hidden>
 
-        <div class="nova-voice">
-          <span class="nova-voice__label">N.O.V.A. // ARCHIVIST NOTE</span>
-          The surface model beneath this projection was assembled from
-          volunteer cartography. It is generous, uneven, and in places openly
-          imaginative. Where a structure declined to state its height, one
-          storey has been assumed on its behalf, and the resulting shadow has
-          been drawn with the same confidence as every other, because the
-          renderer has no vocabulary for doubt. The interface does. Attend to
-          the orange outlines.
-          <br><br>
-          Terrain is not modelled. Vegetation is not modelled. Roofs are
-          treated as flat lids at a single height. The ground is assumed level,
-          which is a serviceable fiction in most cities and an outright lie in
-          a few. Nothing beyond the edge of the chart casts a shadow onto it.
-          <br><br>
-          Note also that this chart reports light rather than darkness. The
-          warm wash marks where the sun arrives; the bare surface beneath it is
-          shadow. An earlier revision attempted the reverse and rendered
-          shadow in precisely the colour of the ground it fell upon, which was
-          accurate, consistent, and entirely invisible.
-          <br><br>
-          The captain is advised to treat this projection as a plan rather than
-          a promise, and to remember that the light itself has never once
-          consulted this instrument before arriving.
-        </div>
+      <p class="lumen-status" data-status hidden></p>
 
-        <div class="nova-prose lumen-limits">
-          <h3>What this instrument does not know</h3>
-          <ul class="nova-objectives">
-            <li>Terrain and mountains. A ridge to the east will delay sunrise by
-                an hour and this tool will not mention it.</li>
-            <li>Trees, awnings, fences, scaffolding, and anything else that is
-                not tagged as a building.</li>
-            <li>Roof geometry. Every structure is a flat-topped extrusion.</li>
-            <li>Sloping ground. Shadows are projected onto a horizontal plane
-                at the base of each building.</li>
-            <li>Buildings outside the visible chart. Zoom out to bring more
-                structures into the calculation.</li>
-            <li>Weather. Cloud will beat this instrument every time.</li>
-          </ul>
-
-          <h3>What it does know, and how well</h3>
-          <p>
-            Sun and moon positions are computed in-house from standard
-            astronomical series and cross-checked against an independent
-            implementation to better than a hundredth of a degree. The
-            astronomy is not the weak link. The buildings are.
-          </p>
-        </div>
+      <div class="lumen-attribution">
+        <span id="map-attribution"></span>
       </div>
     </section>
 
-  </div>
-</main>
+    <!-- ======================================================================
+       CHRONOMETER
+       ====================================================================== -->
+    <section class="lumen-chrono" data-chrono aria-label="Chronometer">
+      <div class="lumen-chrono__head">
+        <button class="nova-btn lumen-chrono__step" data-action="day-prev" title="Previous day">
+          <span aria-hidden="true">&lsaquo;</span><span class="nova-sr-only">Previous day</span>
+        </button>
 
-<footer class="lumen-footer">
-  <span>AG NOVA INDUSTRIES // CREATIVE EXPLORATION LABORATORY</span>
-  <span class="lumen-footer__sep">//</span>
-  <span>STAFF COUNT: 1</span>
-  <span class="lumen-footer__sep">//</span>
-  <span>NO ACCOUNT. NO TRACKING. NO INSTALL.</span>
-</footer>
+        <div class="lumen-chrono__date">
+          <span class="lumen-chrono__date-label" data-date-label>&mdash;</span>
+          <label class="nova-sr-only" for="date-input">Date</label>
+          <input id="date-input" type="date" data-date-input>
+        </div>
 
-<!-- ==========================================================================
+        <button class="nova-btn lumen-chrono__step" data-action="day-next" title="Next day">
+          <span aria-hidden="true">&rsaquo;</span><span class="nova-sr-only">Next day</span>
+        </button>
+
+        <button class="nova-btn lumen-chrono__now" data-action="now" title="Jump to now">NOW</button>
+      </div>
+
+      <div class="lumen-chrono__track" data-chrono-track>
+        <div class="lumen-chrono__bands" data-chrono-bands aria-hidden="true"></div>
+        <div class="lumen-chrono__ticks" data-chrono-ticks aria-hidden="true"></div>
+        <div class="lumen-chrono__markers" data-chrono-markers></div>
+        <div class="lumen-chrono__thumb" data-chrono-thumb aria-hidden="true"></div>
+
+        <label class="nova-sr-only" for="chrono-input">Time of day</label>
+        <input id="chrono-input" class="lumen-chrono__input" data-chrono-input type="range" min="0" max="1439" step="1"
+          value="720">
+      </div>
+
+      <div class="lumen-chrono__readouts">
+        <span class="lumen-chrono__clock" data-chrono-readout>12:00</span>
+        <span class="lumen-chrono__zone">
+          <span data-field="zone">&mdash;</span>
+          <span class="lumen-chrono__sep">&middot;</span>
+          <span data-field="offset">&mdash;</span>
+          <span class="lumen-chrono__sep">&middot;</span>
+          <span data-field="clockUtc">&mdash;</span> UTC
+        </span>
+      </div>
+
+      <p class="lumen-zone-warning" data-field="zoneWarning" hidden>
+        TIMEZONE LOOKUP UNAVAILABLE. TIMES SHOWN USE THIS DEVICE'S ZONE, NOT THE
+        PIN'S. VERIFY BEFORE PLANNING TRAVEL.
+      </p>
+    </section>
+
+    <!-- ======================================================================
+       CONSOLE — telemetry
+       ====================================================================== -->
+    <div class="lumen-console" id="console" data-console>
+
+      <!-- SOLAR -->
+      <section class="nova-panel nova-panel--cyan" style="--panel-index:0">
+        <div class="nova-panel__head">
+          <span class="nova-panel__code">SOL // LIVE TELEMETRY</span>
+          <span class="nova-panel__state" data-field="sunState">&mdash;</span>
+        </div>
+        <div class="nova-panel__body nova-panel__body--tight">
+          <div class="lumen-hero">
+            <span class="lumen-hero__value" data-field="clock">&mdash;&mdash;:&mdash;&mdash;</span>
+            <span class="lumen-hero__unit">LOCAL AT PIN</span>
+          </div>
+          <div class="nova-data">
+            <div class="nova-data__row">
+              <span class="nova-data__label">AZIMUTH</span>
+              <span class="nova-data__value" data-field="sunAz">&mdash;</span>
+              <span class="lumen-compass" data-field="sunAzLabel">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">ALTITUDE</span>
+              <span class="nova-data__value" data-field="sunAlt">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">SHADOW LENGTH</span>
+              <span class="nova-data__value" data-field="shadowRatio">&mdash;</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LUNAR -->
+      <section class="nova-panel nova-panel--ivory" style="--panel-index:1">
+        <div class="nova-panel__head">
+          <span class="nova-panel__code">LUN // LIVE TELEMETRY</span>
+          <span class="nova-panel__state" data-field="moonState">&mdash;</span>
+        </div>
+        <div class="nova-panel__body nova-panel__body--tight">
+          <div class="nova-data">
+            <div class="nova-data__row">
+              <span class="nova-data__label">PHASE</span>
+              <span class="nova-data__value" data-field="moonPhase">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">ILLUMINATED</span>
+              <span class="nova-data__value" data-field="moonFraction">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">AZIMUTH</span>
+              <span class="nova-data__value" data-field="moonAz">&mdash;</span>
+              <span class="lumen-compass" data-field="moonAzLabel">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">ALTITUDE</span>
+              <span class="nova-data__value" data-field="moonAlt">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">DISTANCE</span>
+              <span class="nova-data__value" data-field="moonDistance">&mdash;</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PIN -->
+      <section class="nova-panel" style="--panel-index:2">
+        <div class="nova-panel__head">
+          <span class="nova-panel__code">PIN // TELEMETRY REFERENCE</span>
+        </div>
+        <div class="nova-panel__body nova-panel__body--tight">
+          <div class="nova-data">
+            <div class="nova-data__row">
+              <span class="nova-data__label">LATITUDE</span>
+              <span class="nova-data__value" data-field="lat">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">LONGITUDE</span>
+              <span class="nova-data__value" data-field="lng">&mdash;</span>
+            </div>
+          </div>
+          <p class="lumen-hint">TAP THE CHART TO MOVE THE PIN.</p>
+        </div>
+      </section>
+
+      <!-- EXPOSURE PROFILE -->
+      <section class="nova-panel nova-panel--cyan lumen-panel--wide" style="--panel-index:3">
+        <div class="nova-panel__head">
+          <span class="nova-panel__code">SOLAR EXPOSURE PROFILE</span>
+          <span class="nova-panel__state" data-field="exposureState">&mdash;</span>
+        </div>
+        <div class="nova-panel__body nova-panel__body--tight">
+          <div class="lumen-exposure" data-exposure-bar aria-hidden="true"></div>
+          <div class="lumen-exposure__scale" aria-hidden="true">
+            <span>00</span><span>06</span><span>12</span><span>18</span><span>24</span>
+          </div>
+
+          <div class="nova-data lumen-exposure__totals">
+            <div class="nova-data__row">
+              <span class="nova-data__label">DIRECT LIGHT</span>
+              <span class="nova-data__value nova-data__value--nominal" data-field="exposureTotal">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">OBSTRUCTED</span>
+              <span class="nova-data__value" data-field="exposureShaded">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">DAYLIGHT</span>
+              <span class="nova-data__value" data-field="exposureDaylight">&mdash;</span>
+            </div>
+          </div>
+
+          <div class="lumen-windows" data-windows></div>
+        </div>
+        <div class="nova-panel__foot">
+          SAMPLED EVERY 10 MIN // RADIUS 1200 M // FLAT GROUND ASSUMED
+        </div>
+      </section>
+
+      <!-- EVENT TIMELINE -->
+      <section class="nova-panel nova-panel--orange" style="--panel-index:4">
+        <div class="nova-panel__head">
+          <span class="nova-panel__code">EVENT SEQUENCE // LOCAL DAY</span>
+        </div>
+        <div class="nova-panel__body nova-panel__body--tight">
+          <div class="nova-data" data-timeline></div>
+        </div>
+      </section>
+
+      <!-- SURFACE MODEL -->
+      <section class="nova-panel" style="--panel-index:5">
+        <div class="nova-panel__head">
+          <span class="nova-panel__code">SURFACE MODEL // CONFIDENCE</span>
+        </div>
+        <div class="nova-panel__body nova-panel__body--tight">
+          <div class="nova-data">
+            <div class="nova-data__row">
+              <span class="nova-data__label">STRUCTURES LOADED</span>
+              <span class="nova-data__value" data-field="structures">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">HEIGHT MEASURED</span>
+              <span class="nova-data__value nova-data__value--nominal" data-field="measured">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">HEIGHT ESTIMATED</span>
+              <span class="nova-data__value nova-data__value--elevated" data-field="estimated">&mdash;</span>
+            </div>
+            <div class="nova-data__row">
+              <span class="nova-data__label">MODEL CONFIDENCE</span>
+              <span class="nova-data__value" data-field="confidence">&mdash;</span>
+            </div>
+          </div>
+          <p class="lumen-hint">
+            STRUCTURES WITH AN ORANGE OUTLINE HAVE AN INFERRED HEIGHT.
+            THEIR SHADOWS REST ON AN ASSUMPTION.
+          </p>
+        </div>
+      </section>
+
+      <!-- LIMITATIONS -->
+      <section class="nova-panel nova-panel--ivory lumen-panel--wide" style="--panel-index:6">
+        <div class="nova-panel__head">
+          <span class="nova-panel__code">MODEL LIMITATIONS</span>
+          <button class="lumen-collapse" data-collapse="limitations" aria-expanded="false">
+            EXPAND
+          </button>
+        </div>
+        <div class="nova-panel__body" id="limitations" hidden>
+
+          <div class="nova-voice">
+            <span class="nova-voice__label">N.O.V.A. // ARCHIVIST NOTE</span>
+            The surface model beneath this projection was assembled from
+            volunteer cartography. It is generous, uneven, and in places openly
+            imaginative. Where a structure declined to state its height, one
+            storey has been assumed on its behalf, and the resulting shadow has
+            been drawn with the same confidence as every other, because the
+            renderer has no vocabulary for doubt. The interface does. Attend to
+            the orange outlines.
+            <br><br>
+            Terrain is not modelled. Vegetation is not modelled. Roofs are
+            treated as flat lids at a single height. The ground is assumed level,
+            which is a serviceable fiction in most cities and an outright lie in
+            a few. Nothing beyond the edge of the chart casts a shadow onto it.
+            <br><br>
+            Note also that this chart reports light rather than darkness. The
+            warm wash marks where the sun arrives; the bare surface beneath it is
+            shadow. An earlier revision attempted the reverse and rendered
+            shadow in precisely the colour of the ground it fell upon, which was
+            accurate, consistent, and entirely invisible.
+            <br><br>
+            The captain is advised to treat this projection as a plan rather than
+            a promise, and to remember that the light itself has never once
+            consulted this instrument before arriving.
+          </div>
+
+          <div class="nova-prose lumen-limits">
+            <h3>What this instrument does not know</h3>
+            <ul class="nova-objectives">
+              <li>Terrain and mountains. A ridge to the east will delay sunrise by
+                an hour and this tool will not mention it.</li>
+              <li>Trees, awnings, fences, scaffolding, and anything else that is
+                not tagged as a building.</li>
+              <li>Roof geometry. Every structure is a flat-topped extrusion.</li>
+              <li>Sloping ground. Shadows are projected onto a horizontal plane
+                at the base of each building.</li>
+              <li>Buildings outside the visible chart. Zoom out to bring more
+                structures into the calculation.</li>
+              <li>Weather. Cloud will beat this instrument every time.</li>
+            </ul>
+
+            <h3>What it does know, and how well</h3>
+            <p>
+              Sun and moon positions are computed in-house from standard
+              astronomical series and cross-checked against an independent
+              implementation to better than a hundredth of a degree. The
+              astronomy is not the weak link. The buildings are.
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="lumen-footer">
+    <span>AG NOVA INDUSTRIES // CREATIVE EXPLORATION LABORATORY</span>
+    <span class="lumen-footer__sep">//</span>
+    <span>STAFF COUNT: 1</span>
+    <span class="lumen-footer__sep">//</span>
+    <span>NO ACCOUNT. NO TRACKING. NO INSTALL.</span>
+  </footer>
+
+  <!-- ==========================================================================
      VENDOR
      Downloaded and pinned by tools/fetch-vendor.mjs. Never a CDN reference.
      ========================================================================== -->
-<script src="assets/vendor/maplibre-gl.js"></script>
-<script src="assets/vendor/tz-lookup.js"></script>
-<script type="module" src="src/app.mjs"></script>
+  <script src="assets/vendor/maplibre-gl.js"></script>
+  <script src="assets/vendor/tz-lookup.js"></script>
+  <script type="module" src="src/app.mjs"></script>
 
 </body>
+
 </html>
