@@ -1,0 +1,82 @@
+/* ==========================================================================
+   AG NOVA — 04 ANIMATIONS (SUBSET)
+
+   All motion lives here. Deleting this file leaves a fully functional,
+   completely static instrument. That is deliberate: motion is a layer, never
+   a dependency. Nothing below controls whether anything can be reached.
+   ========================================================================== */
+
+/* Live status dot */
+.nova-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: var(--nova-cyan);
+  animation: nova-pulse 2.6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes nova-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.28; }
+}
+
+/* Panels settle into place on first paint, staggered by --panel-index.
+   Paused until the map reports ready, so the interface resolves as one
+   machine powering up rather than as content arriving piecemeal. */
+.nova-panel {
+  animation: nova-panel-flicker 400ms linear both;
+  animation-delay: calc(var(--panel-index, 0) * 60ms);
+  animation-play-state: paused;
+}
+
+.is-ready .nova-panel { animation-play-state: running; }
+
+@keyframes nova-panel-flicker {
+  0%   { opacity: 0; }
+  15%  { opacity: 0.8; }
+  25%  { opacity: 0.2; }
+  40%  { opacity: 0.9; }
+  55%  { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+/* The reticle breathes. It is the one element on the chart that is reporting
+   a live position, and on a still map it is the only evidence the instrument
+   is powered. */
+.lumen-reticle__ring {
+  animation: lumen-reticle-pulse 3.2s ease-in-out infinite;
+}
+
+@keyframes lumen-reticle-pulse {
+  0%, 100% { opacity: 0.95; }
+  50%      { opacity: 0.45; }
+}
+
+/* Status line arrives rather than appears */
+.lumen-status:not([hidden]) {
+  animation: lumen-status-in 220ms var(--ease-snap) both;
+}
+
+@keyframes lumen-status-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   Every animation above is decorative by construction. When the visitor asks
+   for stillness the instrument becomes still, and nothing becomes
+   unreachable.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .nova-panel { opacity: 1; transform: none; }
+  body::after { animation: none; }
+}

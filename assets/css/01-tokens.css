@@ -1,0 +1,168 @@
+/* ==========================================================================
+   AG NOVA — 01 TOKENS
+   The single source of truth for colour, type, spacing and motion.
+   Change a value here and it propagates across the entire terminal.
+   Nothing in this file should be a rule. Variables only.
+
+   COPIED VERBATIM FROM N.O.V.A. OS.
+   L.U.M.E.N. lives in its own repository, so this file is a copy rather than
+   a link. That is deliberate: an instrument should not change its readout
+   colours because the main terminal was being redecorated. When the parent
+   palette moves and you want this to follow, copy it again on purpose.
+   ========================================================================== */
+
+:root {
+
+  /* ----------------------------------------------------------------------
+     STRUCTURE COLOURS — the physical body of the ship
+     Deep navy. Never pure black, never grey, never green.
+     ---------------------------------------------------------------------- */
+
+  /* Page background. The void the chassis sits in. Use on <body> only. */
+  --nova-space: #08111B;
+
+  /* The main chassis plate. Use for the OS frame, header and taskbar. */
+  --nova-chassis: #0E1A2A;
+
+  /* Default panel surface. Use for every standard content panel. */
+  --nova-panel: #142437;
+
+  /* Raised or highlighted panel surface. Use for nested blocks, table
+     header rows, and the inside of dossier cards. */
+  --nova-panel-alt: #1A2E45;
+
+  /* Structural border. Use for the visible edge of every panel.
+     This is what makes the interface feel built rather than floated. */
+  --nova-border: #314B63;
+
+  /* Internal divider. Use for hairlines, table rules, dashed separators and
+     background grid lines. Always quieter than --nova-border. */
+  --nova-grid: #22374D;
+
+  /* ----------------------------------------------------------------------
+     OPERATIONAL ACCENTS — semantic, not decorative
+     Each accent means something. Do not use them interchangeably.
+     ---------------------------------------------------------------------- */
+
+  /* CYAN = the system is alive and operating.
+     Use for: telemetry, active nav state, links, LIVE status, charts,
+     wireframe graphics, anything reporting a live reading. */
+  --nova-cyan: #8FD8E0;
+
+  /* CYAN BRIGHT = a single value worth looking at right now.
+     Use sparingly. One or two per screen, never a whole block. */
+  --nova-cyan-bright: #B8F3FF;
+
+  /* ORANGE = work in progress, warnings, captain deviations.
+     Use for: IN_DEV status, warning readings, active mission markers,
+     anything the captain is currently disturbing. */
+  --nova-orange: #E6822F;
+
+  /* IVORY = knowledge and archive.
+     Use for: body copy emphasis, quotes, STANDBY status, declassified
+     sections, brand moments. This is the warm human layer. */
+  --nova-ivory: #DCCFAA;
+
+  /* DANGER = genuine failure only. Do not use for decoration.
+     If everything is critical, nothing is. */
+  --nova-danger: #D56756;
+
+  /* ----------------------------------------------------------------------
+     TEXT COLOURS
+     ---------------------------------------------------------------------- */
+
+  --nova-text-primary: #F3F3EE;
+  --nova-text-secondary: #CBD5E1;
+  --nova-text-muted: #7D90A6;
+  --nova-text-diagnostic: #587187;
+
+  /* ----------------------------------------------------------------------
+     DERIVED SURFACES — translucent layers built from the accents
+     ---------------------------------------------------------------------- */
+
+  --nova-cyan-dim: rgba(143, 216, 224, 0.12);
+  --nova-cyan-line: rgba(143, 216, 224, 0.35);
+  --nova-orange-dim: rgba(230, 130, 47, 0.14);
+  --nova-orange-line: rgba(230, 130, 47, 0.40);
+  --nova-ivory-dim: rgba(220, 207, 170, 0.12);
+  --nova-ivory-line: rgba(220, 207, 170, 0.38);
+  --nova-danger-dim: rgba(213, 103, 86, 0.14);
+  --nova-scrim: rgba(8, 17, 27, 0.86);
+  --nova-highlight: rgba(255, 255, 255, 0.04);
+  --nova-recess: rgba(0, 0, 0, 0.3);
+
+  /* ----------------------------------------------------------------------
+     TYPOGRAPHY
+     Two roles only: structure and data. Body copy borrows from structure.
+     ---------------------------------------------------------------------- */
+
+  --font-heading: "Space Grotesk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Inter Tight", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, "Cascadia Mono", Consolas, monospace;
+
+  --fs-micro: 0.625rem;    /* 10px — panel codes, telemetry labels */
+  --fs-tiny: 0.6875rem;    /* 11px — metadata, field labels */
+  --fs-small: 0.75rem;     /* 12px — data rows, taskbar */
+  --fs-base: 0.875rem;     /* 14px — body copy */
+  --fs-mid: 1rem;          /* 16px — panel titles */
+  --fs-large: 1.25rem;     /* 20px — page titles */
+  --fs-xl: 1.75rem;        /* 28px — hero numbers, dossier titles */
+  --fs-display: 2.25rem;   /* 36px — rare */
+
+  --ls-wide: 0.08em;
+  --ls-wider: 0.16em;
+  --ls-data: 0.03em;
+
+  /* ----------------------------------------------------------------------
+     SPACING — 4px base scale
+     ---------------------------------------------------------------------- */
+
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+
+  /* ----------------------------------------------------------------------
+     STRUCTURE METRICS
+     ---------------------------------------------------------------------- */
+
+  --border-thin: 1px;
+  --border-structural: 2px;
+  --border-heavy: 3px;
+  --chamfer: 10px;
+  --chamfer-sm: 6px;
+  --panel-gap: var(--sp-4);
+  --shell-pad: var(--sp-5);
+  --content-max: 1600px;
+  --header-h: 46px;
+
+  /* ----------------------------------------------------------------------
+     MOTION
+     ---------------------------------------------------------------------- */
+
+  --t-press: 70ms;
+  --t-hover: 140ms;
+  --t-ambient: 1200ms;
+
+  --ease-mechanical: cubic-bezier(0.2, 0.8, 0.3, 1);
+  --ease-snap: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-hardware: cubic-bezier(0.4, 0.0, 0.2, 1.2);
+
+  /* ----------------------------------------------------------------------
+     L.U.M.E.N. ADDITIONS
+     The instrument introduces a domain the parent palette was not designed
+     for: cast shadow. These are derived from existing tokens rather than
+     invented, so the shadow layer remains structure and spends none of the
+     5% accent budget.
+     ---------------------------------------------------------------------- */
+
+  --lumen-shadow: rgba(8, 17, 27, 0.62);
+  --lumen-chrono-h: 52px;
+  --lumen-thumb: 26px;
+}

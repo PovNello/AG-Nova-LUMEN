@@ -1,0 +1,260 @@
+/* ==========================================================================
+   L.U.M.E.N. — 10 LAYOUT
+   The instrument shell.
+
+   ---------------------------------------------------------------------------
+   MOBILE FIRST, DELIBERATELY INVERTED
+   ---------------------------------------------------------------------------
+   The main N.O.V.A. OS terminal is designed for a desk and re-racked downward
+   for smaller screens. This instrument inverts that, because it is used
+   outdoors, before dawn, one-handed, with cold fingers.
+
+   Everything below is the small-screen layout. The desktop arrangement is
+   derived from it in 13-lumen-responsive.css, not the other way round.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   HEADER
+
+   Sticky rather than scrolling away. On the main terminal the header is a
+   status strip you pass by; here it carries the search field and the route
+   back to AG Nova, and losing it behind a scroll on a phone is a small but
+   constant irritation.
+
+   It stays a strip, not a navigation bar: this instrument has one screen.
+   -------------------------------------------------------------------------- */
+
+.lumen-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  margin: 0 0 var(--panel-gap);
+  padding: var(--sp-2) var(--sp-3);
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  /* Square off the top edge so it meets the viewport cleanly when pinned,
+     and keep the chamfer on the bottom two corners only. */
+  clip-path: polygon(
+    0 0, 100% 0,
+    100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%,
+    var(--chamfer) 100%, 0 calc(100% - var(--chamfer))
+  );
+  border-top: 0;
+  box-shadow: 0 6px 18px rgba(8, 17, 27, 0.55);
+}
+
+.lumen-home {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  color: var(--nova-text-muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.lumen-home:hover { color: var(--nova-cyan); }
+
+/* --------------------------------------------------------------------------
+   SEARCH
+   Submit-only. Never search-as-you-type: the gazetteer is community
+   infrastructure with a strict rate policy, and firing a request per
+   keystroke is exactly the behaviour that gets an application blocked.
+   -------------------------------------------------------------------------- */
+
+.lumen-search {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-2);
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.lumen-search input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--nova-space);
+  border: var(--border-thin) solid var(--nova-grid);
+  color: var(--nova-text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  letter-spacing: var(--ls-data);
+  text-transform: uppercase;
+}
+
+.lumen-search input::placeholder {
+  color: var(--nova-text-diagnostic);
+  letter-spacing: var(--ls-wide);
+}
+
+.lumen-search input:focus {
+  border-color: var(--nova-cyan-line);
+  outline: none;
+}
+
+.lumen-search__go {
+  padding: var(--sp-2) var(--sp-3);
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   SHELL
+   -------------------------------------------------------------------------- */
+
+.lumen-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-gap);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--sp-3);
+}
+
+/* --------------------------------------------------------------------------
+   CHART FRAME
+   The map is embedded in hardware, not floated on a page. Thick border,
+   chamfered corners, a labelled head strip and a footer carrying the
+   attribution the tile licence requires.
+   -------------------------------------------------------------------------- */
+
+.lumen-chart-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--nova-chassis);
+  border: var(--border-structural) solid var(--nova-border);
+  clip-path: polygon(
+    0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer),
+    100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer))
+  );
+  box-shadow: inset 0 1px 0 0 var(--nova-highlight);
+  overflow: hidden;
+}
+
+.lumen-chart-frame__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--nova-panel-alt);
+  border-bottom: var(--border-thin) solid var(--nova-border);
+  flex-shrink: 0;
+}
+
+.lumen-chart {
+  position: relative;
+  width: 100%;
+  /* Half the viewport on a phone. The single most important sizing decision
+     in the layout: enough map to recognise a street, enough console below it
+     to read the numbers without scrolling. */
+  height: 52vh;
+  min-height: 300px;
+  background: var(--nova-space);
+}
+
+/* --------------------------------------------------------------------------
+   CHART CONTROLS
+   MapLibre's own controls are replaced entirely. Its stock zoom buttons and
+   compass belong to a different design system and would read as a foreign
+   object bolted onto the console.
+   -------------------------------------------------------------------------- */
+
+.lumen-chart-controls {
+  position: absolute;
+  top: calc(var(--sp-8) + var(--sp-2));
+  right: var(--sp-3);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.lumen-ctl {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  font-size: var(--fs-mid);
+  background: var(--nova-scrim);
+  backdrop-filter: blur(2px);
+}
+
+.lumen-ctl__label {
+  font-size: var(--fs-micro);
+  letter-spacing: 0.06em;
+}
+
+/* --------------------------------------------------------------------------
+   STATUS LINE
+   Operator-facing messages. Not console.log, where nobody will ever see them.
+   -------------------------------------------------------------------------- */
+
+.lumen-status {
+  position: absolute;
+  left: var(--sp-3);
+  bottom: calc(var(--sp-6) + var(--sp-2));
+  z-index: 10;
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  max-width: calc(100% - var(--sp-6) - 56px);
+  background: var(--nova-scrim);
+  border-left: var(--border-heavy) solid var(--nova-cyan);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  color: var(--nova-text-primary);
+  text-transform: uppercase;
+}
+
+.lumen-status.is-warn { border-left-color: var(--nova-orange); }
+.lumen-status.is-ok   { border-left-color: var(--nova-cyan); }
+.lumen-status.is-info { border-left-color: var(--nova-ivory); }
+
+/* --------------------------------------------------------------------------
+   ATTRIBUTION
+   Required by the tile and data licences. Restyled to belong to the
+   instrument, never removed and never made illegible.
+   -------------------------------------------------------------------------- */
+
+.lumen-attribution {
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--nova-space);
+  border-top: var(--border-thin) solid var(--nova-grid);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-data);
+  color: var(--nova-text-diagnostic);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lumen-attribution a { color: var(--nova-text-muted); }
+.lumen-attribution a:hover { color: var(--nova-cyan); }
+
+/* --------------------------------------------------------------------------
+   CONSOLE GRID
+   -------------------------------------------------------------------------- */
+
+.lumen-console {
+  display: grid;
+  gap: var(--panel-gap);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* --------------------------------------------------------------------------
+   FOOTER
+   -------------------------------------------------------------------------- */
+
+.lumen-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-6) var(--sp-3) var(--sp-8);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  color: var(--nova-text-diagnostic);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.lumen-footer__sep { opacity: 0.5; }

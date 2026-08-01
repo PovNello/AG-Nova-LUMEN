@@ -1,0 +1,7 @@
+# Vendored libraries are fetched, not committed.
+# Run: node tools/fetch-vendor.mjs
+assets/vendor/*
+!assets/vendor/.gitkeep
+
+.DS_Store
+*.log

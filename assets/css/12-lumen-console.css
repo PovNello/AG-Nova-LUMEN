@@ -1,0 +1,496 @@
+/* ==========================================================================
+   L.U.M.E.N. — 12 CONSOLE
+   The chronometer, the telemetry readouts and the exposure profile.
+   ========================================================================== */
+
+/* ==========================================================================
+   CHRONOMETER
+   The signature control. Not a styled range input: a painted instrument with
+   a real range input underneath carrying keyboard and assistive support.
+
+   The track shows the actual twilight bands for the selected date, so the
+   shape of the day is visible before the operator touches anything.
+   ========================================================================== */
+
+.lumen-chrono {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--nova-chassis);
+  border: var(--border-structural) solid var(--nova-border);
+  clip-path: polygon(
+    0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer),
+    100% 100%, var(--chamfer) 100%, 0 calc(100% - var(--chamfer))
+  );
+  box-shadow: inset 0 1px 0 0 var(--nova-highlight);
+}
+
+.lumen-chrono__head {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-2);
+}
+
+.lumen-chrono__step {
+  width: 44px;
+  padding: 0;
+  flex-shrink: 0;
+  font-size: var(--fs-mid);
+}
+
+.lumen-chrono__date {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--nova-space);
+  border: var(--border-thin) solid var(--nova-grid);
+}
+
+.lumen-chrono__date-label {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-small);
+  letter-spacing: var(--ls-wider);
+  color: var(--nova-text-primary);
+  text-transform: uppercase;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* The native date picker sits invisibly over the label. The operator gets the
+   platform's own calendar, which is always better than a hand-built one, and
+   the instrument keeps its typography. */
+.lumen-chrono__date input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;   /* prevents the zoom-on-focus behaviour on iOS */
+}
+
+.lumen-chrono__now {
+  flex-shrink: 0;
+  padding: var(--sp-2) var(--sp-3);
+}
+
+/* --------------------------------------------------------------------------
+   TRACK
+   -------------------------------------------------------------------------- */
+
+.lumen-chrono__track {
+  position: relative;
+  height: var(--lumen-chrono-h);
+  background: var(--nova-space);
+  border: var(--border-thin) solid var(--nova-grid);
+  cursor: pointer;
+  touch-action: none;   /* the whole strip is a drag surface */
+  overflow: hidden;
+}
+
+.lumen-chrono__bands,
+.lumen-chrono__ticks,
+.lumen-chrono__markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.lumen-chrono__markers { pointer-events: none; }
+
+/* Twilight bands, painted darkest first so each overwrites the last. */
+.lumen-chrono__band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.lumen-chrono__band.is-astro    { background: #0C1725; }
+.lumen-chrono__band.is-nautical { background: #101F32; }
+.lumen-chrono__band.is-civil    { background: #16293E; }
+.lumen-chrono__band.is-day      { background: #1D3550; }
+
+.lumen-chrono__tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 8px;
+  background: var(--nova-grid);
+}
+
+.lumen-chrono__tick.is-major {
+  height: 14px;
+  background: var(--nova-border);
+}
+
+.lumen-chrono__tick-label {
+  position: absolute;
+  top: 15px;
+  left: 3px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-data);
+  color: var(--nova-text-diagnostic);
+}
+
+/* --------------------------------------------------------------------------
+   EVENT MARKERS
+   Also snap targets. Hitting sunrise precisely by dragging across 1440
+   positions on a phone is not realistic, so every marker is a button.
+   -------------------------------------------------------------------------- */
+
+.lumen-chrono__marker {
+  position: absolute;
+  bottom: 0;
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.lumen-chrono__marker::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 2px;
+  height: 16px;
+  margin-left: -1px;
+  background: var(--nova-cyan);
+}
+
+.lumen-chrono__marker.is-golden::after { background: var(--nova-orange); }
+.lumen-chrono__marker.is-noon::after   { background: var(--nova-cyan-bright); height: 22px; }
+
+.lumen-chrono__marker:hover::after { width: 3px; margin-left: -1.5px; }
+
+/* --------------------------------------------------------------------------
+   THUMB
+   Mechanical: a heavy carrier with a hairline cursor through it.
+   -------------------------------------------------------------------------- */
+
+.lumen-chrono__thumb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--lumen-thumb);
+  margin-left: calc(var(--lumen-thumb) / -2);
+  pointer-events: none;
+}
+
+.lumen-chrono__thumb::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--nova-cyan-bright);
+}
+
+.lumen-chrono__thumb::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: var(--lumen-thumb);
+  height: 14px;
+  margin-top: -7px;
+  background: var(--nova-panel-alt);
+  border: var(--border-thin) solid var(--nova-cyan-bright);
+  box-shadow: 0 2px 0 0 #0a1420;
+}
+
+/* The real control. Invisible, full-bleed, still focusable and still
+   operable by keyboard and assistive technology. */
+.lumen-chrono__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.lumen-chrono__input:focus-visible + * ,
+.lumen-chrono__track:focus-within {
+  outline: 2px solid var(--nova-cyan);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   READOUTS
+   -------------------------------------------------------------------------- */
+
+.lumen-chrono__readouts {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.lumen-chrono__clock {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xl);
+  font-weight: 500;
+  letter-spacing: var(--ls-data);
+  color: var(--nova-cyan-bright);
+  line-height: 1;
+}
+
+.lumen-chrono__zone {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  color: var(--nova-text-muted);
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.lumen-chrono__sep { opacity: 0.4; margin: 0 2px; }
+
+/* A degraded timezone is not a footnote. Every time on screen is wrong in a
+   way that does not look wrong, so it gets a warning block. */
+.lumen-zone-warning {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--nova-orange-dim);
+  border-left: var(--border-heavy) solid var(--nova-orange);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wide);
+  line-height: 1.5;
+  color: var(--nova-orange);
+}
+
+/* ==========================================================================
+   TELEMETRY
+   ========================================================================== */
+
+.lumen-hero {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-3);
+  margin-bottom: var(--sp-1);
+  border-bottom: var(--border-thin) dashed var(--nova-grid);
+}
+
+.lumen-hero__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xl);
+  font-weight: 500;
+  letter-spacing: var(--ls-data);
+  color: var(--nova-cyan-bright);
+  line-height: 1;
+}
+
+.lumen-hero__unit {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  color: var(--nova-text-diagnostic);
+  text-transform: uppercase;
+  margin-left: auto;
+}
+
+.lumen-compass {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  color: var(--nova-text-diagnostic);
+  min-width: 3.2em;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lumen-hint {
+  margin-top: var(--sp-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wide);
+  line-height: 1.6;
+  color: var(--nova-text-diagnostic);
+  text-transform: uppercase;
+}
+
+.lumen-model-state {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+}
+.lumen-model-state.is-ok      { color: var(--nova-cyan); }
+.lumen-model-state.is-warning { color: var(--nova-orange); }
+.lumen-model-state.is-idle    { color: var(--nova-text-diagnostic); }
+
+/* ==========================================================================
+   EVENT TIMELINE
+   ========================================================================== */
+
+.lumen-event.is-current {
+  background: var(--nova-cyan-dim);
+  box-shadow: inset 3px 0 0 0 var(--nova-cyan);
+  padding-left: var(--sp-2);
+  margin-left: calc(var(--sp-2) * -1);
+}
+
+.lumen-event.is-absent .nova-data__value {
+  color: var(--nova-text-diagnostic);
+}
+
+.lumen-event.is-absent .nova-data__label {
+  opacity: 0.55;
+}
+
+.lumen-event--lunar .nova-data__value { color: var(--nova-ivory); }
+
+.lumen-event-separator {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-2);
+  border-top: var(--border-thin) solid var(--nova-grid);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  color: var(--nova-ivory);
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   EXPOSURE PROFILE
+   A segmented 24 hour bar. Ten discrete blocks per hour, no gradient fill —
+   this is an instrument readout, not a data visualisation.
+   ========================================================================== */
+
+.lumen-exposure {
+  display: flex;
+  gap: 1px;
+  height: 30px;
+  padding: 2px;
+  background: var(--nova-space);
+  border: var(--border-thin) solid var(--nova-grid);
+}
+
+.lumen-exposure__seg {
+  flex: 1;
+  min-width: 0;
+  background: var(--nova-grid);
+  opacity: 0.35;
+}
+
+.lumen-exposure__seg.is-night  { background: var(--nova-grid); opacity: 0.3; }
+.lumen-exposure__seg.is-shaded { background: var(--nova-border); opacity: 0.75; }
+.lumen-exposure__seg.is-sunlit { background: var(--nova-cyan); opacity: 1; }
+
+/* The chronometer's position, mirrored onto the profile so the operator can
+   see at a glance whether the instant they are inspecting is lit. */
+.lumen-exposure__seg.is-cursor {
+  background: var(--nova-cyan-bright);
+  opacity: 1;
+  box-shadow: 0 0 0 1px var(--nova-cyan-bright);
+}
+
+.lumen-exposure__scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--sp-1);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-micro);
+  color: var(--nova-text-diagnostic);
+}
+
+.lumen-exposure__totals { margin-top: var(--sp-3); }
+
+/* --------------------------------------------------------------------------
+   LIGHT WINDOWS
+   -------------------------------------------------------------------------- */
+
+.lumen-windows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--sp-3);
+}
+
+.lumen-window {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--nova-panel-alt);
+  border-left: var(--border-structural) solid var(--nova-cyan);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-tiny);
+  letter-spacing: var(--ls-data);
+}
+
+.lumen-window.is-golden { border-left-color: var(--nova-orange); }
+
+.lumen-window__id {
+  color: var(--nova-text-diagnostic);
+  flex-shrink: 0;
+}
+
+.lumen-window__range {
+  color: var(--nova-text-primary);
+}
+
+.lumen-window__dur {
+  margin-left: auto;
+  color: var(--nova-cyan);
+  flex-shrink: 0;
+}
+
+.lumen-window__tag {
+  padding: 0 var(--sp-2);
+  border: var(--border-thin) solid var(--nova-orange);
+  color: var(--nova-orange);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   COLLAPSE CONTROL
+   ========================================================================== */
+
+.lumen-collapse {
+  margin-left: auto;
+  padding: 2px var(--sp-2);
+  background: transparent;
+  border: var(--border-thin) solid var(--nova-ivory-line);
+  color: var(--nova-ivory);
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  letter-spacing: var(--ls-wider);
+  text-transform: uppercase;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.lumen-collapse:hover {
+  background: var(--nova-ivory-dim);
+}
+
+.lumen-collapse[aria-expanded="true"]::after { content: " \25B4"; }
+.lumen-collapse[aria-expanded="false"]::after { content: " \25BE"; }
+
+.lumen-limits { margin-top: var(--sp-4); }

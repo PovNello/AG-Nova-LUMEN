@@ -1,0 +1,184 @@
+/* ==========================================================================
+   L.U.M.E.N. — 13 RESPONSIVE
+
+   Everything before this file is the phone layout. This file grows it for
+   larger screens. That is the opposite of how the main N.O.V.A. OS terminal
+   is built, and it is deliberate: this instrument is used outdoors, before
+   dawn, one-handed. The small screen is the primary case, not the fallback.
+
+   Content is never removed at any width. It is re-racked.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   NARROW PHONES — 380px and below
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 380px) {
+  :root {
+    --shell-pad: var(--sp-2);
+    --panel-gap: var(--sp-2);
+    --chamfer: 8px;
+  }
+
+  .lumen-header__sub { display: none; }
+  .lumen-home { display: none; }
+
+  .lumen-chrono__clock { font-size: var(--fs-large); }
+  .lumen-hero__value { font-size: var(--fs-large); }
+
+  /* Controls stay 44px: the one dimension that must never shrink, because
+     it is the only thing standing between the operator and a missed tap
+     with cold hands. */
+  .lumen-ctl { width: 42px; height: 42px; }
+}
+
+/* --------------------------------------------------------------------------
+   LARGE PHONES AND SMALL TABLETS — 600px and up
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 600px) {
+  .lumen-console {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* The exposure profile and the limitations note read across the full rack:
+     one is a 24 hour bar, the other is prose. Neither survives a narrow
+     column. */
+  .lumen-panel--wide { grid-column: 1 / -1; }
+
+  .lumen-chart { height: 46vh; }
+}
+
+/* --------------------------------------------------------------------------
+   TABLETS — 900px and up
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 900px) {
+  .lumen-shell { padding: var(--sp-4); }
+  .lumen-header { padding: var(--sp-2) var(--sp-4); }
+
+  .lumen-console {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .lumen-chart { height: 52vh; }
+
+  .lumen-chrono__head { gap: var(--sp-3); }
+}
+
+/* --------------------------------------------------------------------------
+   DESKTOP — 1200px and up
+   The full diagnostic terminal. Chart on the left, chronometer beneath it,
+   telemetry racked down the right-hand side.
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 1200px) {
+  .lumen-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "chart   console"
+      "chrono  console";
+    align-items: start;
+    padding: var(--sp-5);
+    gap: var(--panel-gap);
+  }
+
+  .lumen-chart-frame { grid-area: chart; }
+  .lumen-chrono      { grid-area: chrono; }
+
+  .lumen-console {
+    grid-area: console;
+    grid-template-columns: minmax(0, 1fr);
+    /* The console scrolls independently of the chart, so the map never leaves
+       the screen while the operator reads down the telemetry. */
+    max-height: calc(100vh - var(--sp-10));
+    overflow-y: auto;
+    padding-right: var(--sp-1);
+  }
+
+  .lumen-panel--wide { grid-column: auto; }
+
+  /* The chart takes the height the chronometer and header leave behind,
+     rather than a fixed fraction of the viewport. */
+  .lumen-chart {
+    height: calc(100vh - 260px);
+    min-height: 440px;
+  }
+
+  .lumen-chart-controls {
+    top: calc(var(--sp-8) + var(--sp-3));
+    right: var(--sp-4);
+  }
+
+  .lumen-chrono__track { height: 64px; }
+}
+
+/* --------------------------------------------------------------------------
+   LARGE DESKTOP — keep density rather than stretching panels thin
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 1800px) {
+  .lumen-shell {
+    grid-template-columns: minmax(0, 1fr) 440px;
+    gap: var(--sp-5);
+    padding: var(--sp-6);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   LANDSCAPE PHONE
+   A short, wide viewport is the worst case for this layout: the map wants
+   height and there is none. Side by side is the only sensible answer.
+   -------------------------------------------------------------------------- */
+
+@media (max-height: 560px) and (orientation: landscape) and (max-width: 1199px) {
+  .lumen-chart { height: 62vh; min-height: 220px; }
+  .lumen-chrono__track { height: 40px; }
+  .lumen-chrono__clock { font-size: var(--fs-large); }
+}
+
+/* --------------------------------------------------------------------------
+   POINTER-COARSE
+   Touch targets grow on devices without a precise pointer, regardless of
+   screen width. A tablet is not a desk.
+   -------------------------------------------------------------------------- */
+
+@media (pointer: coarse) {
+  .lumen-chrono__marker { width: 34px; margin-left: -17px; }
+  .lumen-ctl { width: 46px; height: 46px; }
+  .lumen-chrono__step { width: 46px; }
+}
+
+/* --------------------------------------------------------------------------
+   PRINT
+   A plan should survive being put on paper and taken outside, which is more
+   than can be said for a phone battery at dawn.
+   -------------------------------------------------------------------------- */
+
+@media print {
+  body { background: #fff; color: #000; }
+  body::after { display: none !important; }
+
+  .lumen-chart-controls,
+  .lumen-status,
+  .lumen-search,
+  .lumen-chrono__step,
+  .lumen-chrono__now,
+  .lumen-collapse { display: none !important; }
+
+  .nova-panel {
+    border: 1px solid #000;
+    clip-path: none;
+    break-inside: avoid;
+    animation: none;
+    background: #fff;
+  }
+
+  .nova-panel__code,
+  .nova-data__value,
+  .nova-data__label { color: #000; }
+
+  #limitations[hidden] { display: block !important; }
+}
