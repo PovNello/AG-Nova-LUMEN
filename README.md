@@ -27,7 +27,7 @@ node tools/fetch-vendor.mjs
 
 # 2. Serve the project root over HTTP.
 #    It must be HTTP, not file:// — ES modules and fetch require an origin.
-python3 -m http.server 8080
+python -m http.server 8080
 
 # 3. Open http://localhost:8080
 ```
@@ -41,7 +41,7 @@ node tools/verify-astro.mjs      # ephemerides vs an independent NOAA implementa
 node tools/verify-geometry.mjs   # projection, hull, ray casting, exposure scenarios
 node tools/verify-wiring.mjs     # markup/module/stylesheet contracts
 node tools/verify-contrast.mjs   # perceptual separability of light and shadow
-node tools/verify-astro.mjs && node tools/verify-geometry.mjs && node tools/verify-wiring.mjs && node tools/verify-contrast.mjs
+node tools/verify-all.mjs        # runs all verifications
 ```
 
 All four must pass. See **Verification** below for what they actually prove.

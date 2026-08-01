@@ -61,6 +61,8 @@ a bad change. So is the reverse.
 9. **Motion is a layer.** Deleting `04-animations.css` must leave a fully
    functional static instrument.
 
+10. **The CHANGELOG.md file must be updated on every action.** Additionally, all reference documentation (like this file) must be updated if necessary.
+
 ---
 
 ## Aesthetic law
